@@ -7,7 +7,7 @@ require("rpart")
 require("rpart.plot")
 
 #Aqui se debe poner la carpeta de SU computadora local
-setwd("D:\\gdrive\\UTN2022P\\")  #Establezco el Working Directory
+setwd("~/R/labo")  #Establezco el Working Directory
 
 #cargo los datos de 202011 que es donde voy a ENTRENAR el modelo
 dtrain  <- fread("./datasets/paquete_premium_202011.csv")
@@ -48,9 +48,9 @@ entrega  <- dapply[   , list(numero_de_cliente, Predicted) ] #genero la salida
 
 #genero el archivo para Kaggle
 #creo la carpeta donde va el experimento
-dir.create( "./labo/exp/" ) 
-dir.create( "./labo/exp/KA2001" ) 
+dir.create( "~/R/labo/exp/" ) 
+dir.create( "~/R/labo/exp/KA2001" ) 
 
 fwrite( entrega, 
-        file= "./labo/exp/KA2001/K101_001.csv", 
+        file= "~/R/labo/exp/KA2001/K101_001.csv", 
         sep= "," )
