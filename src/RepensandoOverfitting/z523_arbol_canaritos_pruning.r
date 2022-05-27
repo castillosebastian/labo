@@ -7,7 +7,7 @@ library("rpart")
 library("rpart.plot")
 
 
-setwd( "D:\\gdrive\\ITBA2022A\\" )  #establezco la carpeta donde voy a trabajar
+setwd("~/R/labo")  #Estable
 
 #cargo el dataset
 dtrain  <- fread( "./datasets/paquete_premium_202011.csv")
@@ -67,9 +67,9 @@ entrega  <- as.data.table( list( "numero_de_cliente"= dapply$numero_de_cliente,
 
 
 #creo la carepta donde guardo el resultado
-dir.create( "./labo/exp/",  showWarnings = FALSE ) 
-dir.create( "./labo/exp/KA5230/", showWarnings = FALSE )
-setwd("D:\\gdrive\\ITBA2022A\\labo\\exp\\KA5230\\")   #Establezco el Working Directory DEL EXPERIMENTO
+dir.create( "~/R/labo/exp",  showWarnings = FALSE ) 
+dir.create( "~/R/labo/exp/KA5230/", showWarnings = FALSE )
+setwd("~/R/labo/exp/KA5230")
 
 #grabo la salida para Kaggle
 fwrite( entrega, 

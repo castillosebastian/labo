@@ -1,0 +1,86 @@
+require("data.table")
+library(purrr)
+library(dplyr)
+library(stringr)
+
+rm( list=ls() )
+gc()
+
+nexperimentos = 10
+tiros_preseleccion = 60
+tiros_eliminatorias = 47
+supera_preseleccion = vector()
+total_aciertos = vector()
+
+fixed_random <-  function(tiros, vec){
+  
+  upper_band = round(tiros * 0.1)
+  lower_band = round(tiros * 0.5)
+  
+  vec[vec > upper_band] <- upper_band
+  vec[vec < lower_band] <- lower_band
+  
+  vec
+  
+}
+
+for (j in 1:nexperimentos){
+  
+  gimnasio_tirar  <- function(  pids,  pcantidad )
+  {
+    GLOBAL_tiros_total  <<-  GLOBAL_tiros_total + length( pids )*pcantidad
+    res  <- mapply(  ftirar, GLOBAL_jugadores[pids], pcantidad )
+    
+    return( res )
+  }
+  
+  ftirar  <- function( prob, qty )
+  {
+    return( sum( runif(qty) < prob ) )
+  }
+
+  mejor      <-  0.7
+  peloton    <-  ( 501:599 ) / 1000
+  jugadores  <-  c( peloton, mejor ) 
+  ids_juegan  <- 1:100   
+  
+  resultados  <- data.table("id" = 1:100)
+  cantidad_tiros = vector()
+  
+  # Preseleccion------------------------------------------------------
+  
+  cantidad_tiros[[1]] <- tiros_preseleccion * length(ids_juegan)
+  aciertos = mapply( ftirar, jugadores[ids_juegan], tiros_preseleccion)
+  
+  # Eureka!
+  aciertos = fixed_random(tiros_preseleccion, aciertos)
+  
+  resultados$V0 = aciertos  
+  mediana  <- resultados[ ids_juegan, median(V0) ]
+  ids_juegan = resultados$id[resultados$V0 >= mediana]
+  resultados  <- resultados[ V0 >= mediana,  ]
+  supera_preseleccion[[j]] = 100 %in% ids_juegan
+  
+  # Rondas Eliminatorias----------------------------------------------
+  
+  for(i in 3:8){
+    
+    resultados[[i]] = mapply( ftirar, jugadores[ids_juegan], tiros_eliminatorias)
+    
+    # Eureka!
+    resultados[[i]] = fixed_random(tiros_eliminatorias, resultados[[i]] )
+    
+    cantidad_tiros[[i]] = nrow(resultados) * tiros_eliminatorias
+    resultados = resultados[order(resultados[[i]],decreasing=TRUE)][1:(nrow(resultados)-7),]
+    ids_juegan = resultados$id
+    
+  }
+  
+  resultados <- resultados %>% mutate(total = select(., contains("V")) %>% rowSums()) 
+  total_aciertos[[j]] = resultados$id[which.max(resultados$total)] == 100
+
+}
+
+cat(sum(supera_preseleccion)/nexperimentos)
+cat(sum(total_aciertos)/nexperimentos)
+cat(sum(cantidad_tiros, na.rm = T))

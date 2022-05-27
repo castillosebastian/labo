@@ -1,0 +1,32 @@
+---
+title: "Dasafío casatalentos"
+output: html_notebook
+---
+
+
+
+¿Que algoritmo debe seguir el cazatalentos para encontrar en la menor cantidad de tiros libres
+totales al verdadero mejor , de tal forma que el 99% de las veces que se aplica el algoritmo, el
+único elegido por el método sea el verdadero mejor ?
+
+Problema: el casatalento tiene que optimizar su tiempo de búsqueda y su eficacia en la identificación del 'verdadero mejor' considerando el 'indice de enceste' en tiros libros de cada postulante. Cuando le demora en las prueban baje y crezca su eficacia en la identificación del target, mayor será su ganancia como cazatalentos.
+
+El intento A intanta disminuir la aleatoriedad en los resultados agregando dos 'rondas de pruebas'. De esta forma aunque esto de por sí no me asegura identificar al 'verdadero mejor' sí reduzco la cantidad de jugadores, reduciendo "el problema de las múltiples comparaciones".
+
+Elementos
+-*sum( runif(10) < 0.85 )*: los experimientos arrojan una probabilidad que si queda comprendida dentro de la probabiidad de enceste del jugador equivale a acierto sino a 'tiro libre errado.    
+
+```{r}
+gustavo_ganador <-  0
+for( i in 1:10000 ){
+  
+  aciertos_michael  <-  sum( runif(10) < 0.85 )
+  aciertos_gustavo  <-  sum( runif(10) < 0.10 )
+  
+  if(aciertos_gustavo > aciertos_michael) gustavo_ganador <- gustavo_ganador + i
+  
+}
+print( gustavo_ganador )
+
+```
+
