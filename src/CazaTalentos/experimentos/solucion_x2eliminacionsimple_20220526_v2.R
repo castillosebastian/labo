@@ -11,7 +11,7 @@ gc()
 #set.seed(777787)
 
 nexperimentos = 10
-tiros_finales = 4
+tiros_finales = 18
 # guarda resultados
 total_aciertos = vector()
 # control interno del algoritmo: veo si jugador.7 supera 1a eliminación (tiros_iniciales * primer_iter)
@@ -31,10 +31,11 @@ for (j in 1:nexperimentos){
   ids_juegan  <- 1:100   
   
   resultados  <- data.table("id" = ids_juegan)
-  tablero  <- data.table("id" = 1:100, tiros_totales = 0)
   cantidad_tiros = vector()
+  tablero  <- data.table("id" = 1:100, tiros_totales = 0)
+  cantidad_tiros[[1]] = length(ids_juegan) * 1
   
-  for(i in 2:91){
+  for(i in 2:13){
     
     resultados[[i]] = mapply( ftirar, jugadores[ids_juegan], tiros_finales)
     
@@ -42,15 +43,12 @@ for (j in 1:nexperimentos){
     
     tablero$tiros_totales  =  tablero$tiros_totales +  resultados[[i]]
     
-    tablero = tablero[order(tablero$tiros_totales, decreasing = TRUE)]
-    
-    jugador_descalificado = tablero$id[which.min(tablero$tiros_totales)]
-    
-    tablero = tablero[ id != jugador_descalificado,]
-    
-    resultados = resultados[id != jugador_descalificado,]
+    tablero = tablero[order(tablero$tiros_totales, decreasing = TRUE)][1:(nrow(tablero)-i),]
     
     ids_juegan = tablero$id
+    
+    resultados = resultados[ids_juegan,]
+  
   }
   
   total_aciertos[[j]] = tablero$id[which.max(tablero$tiros_totales)] == 100

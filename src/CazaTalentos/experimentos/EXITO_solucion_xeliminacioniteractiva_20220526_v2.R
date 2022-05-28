@@ -6,7 +6,7 @@ library(stringr)
 rm( list=ls() )
 gc()
 
-set.seed( 10237)
+set.seed( 1023768)
 
 nexperimentos = 10000
 tiros_iniciales = 58

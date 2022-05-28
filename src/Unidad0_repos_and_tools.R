@@ -46,3 +46,12 @@ library(raster)
 library(dplyr)
 library(data.table)
 
+# ". => "~/R
+
+directorio = "~/R/labo"  #Establezco el Working Directory
+setwd(directorio)
+
+#genero el archivo para Kaggle
+#creo la carpeta donde va el experimento
+# dir.create( "~/R/labo/exp/", showWarnings = FALSE  )
+# dir.create( "~/R/labo/exp/KA2022/", showWarnings = FALSE  )

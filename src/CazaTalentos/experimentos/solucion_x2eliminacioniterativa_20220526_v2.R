@@ -11,9 +11,9 @@ set.seed(10237)
 #set.seed(777787)
 
 nexperimentos = 10000
-primer_inter = 50
+primer_inter = 10
 tiros_iniciales = 2
-tiros_finales = 5
+tiros_finales = 3
 # guarda resultados
 total_aciertos = vector()
 # control interno del algoritmo: veo si jugador.7 supera 1a eliminación (tiros_iniciales * primer_iter)

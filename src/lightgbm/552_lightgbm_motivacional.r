@@ -20,9 +20,6 @@ require("lightgbm")
 
 ksemilla  <- 102191  #poner aqui la PRIMERA de sus cinco semillas
 
-#Aqui se debe poner la carpeta de la computadora local
-setwd("D:\\gdrive\\UTN2022P\\")   #Establezco el Working Directory
-
 #cargo el dataset donde voy a entrenar
 dataset  <- fread("./datasets/paquete_premium_202011.csv", stringsAsFactors= TRUE)
 
