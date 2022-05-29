@@ -1,0 +1,132 @@
+---
+title: "Modelando probabilidades"
+author: "Sebastian Castillo"
+date: '2022-05-29'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require("data.table")
+library(purrr)
+library(dplyr)
+library(stringr)
+library(kableExtra)
+options(scipen = 999) # inhabilito notacion científica
+```
+
+
+***"To err is human, to forgive divine, but to include errors in your design is statistical"***, Leslie Kish.       
+
+
+```{r}
+  ftirar  <- function( prob, qty )
+  {
+    return( sum( runif(qty) < prob ) )
+  }
+
+  mejor      <-  0.7
+  peloton    <-  ( 501:599 ) / 1000
+  jugadores  <-  c( peloton, mejor ) 
+  ids_juegan  <- 1:100   
+  
+```
+
+# Problema de Cazatalentos
+
+## Veamos la probabilidad de tiros errados (fracasos) en algunos jugadores
+
+Supongamos que hacemos tirar a algunos jugadores del grupo analizado: ¿cuál es la probabilidad que tienen, por ejemplo, el mejor (indice de enceste 0.7) y el segundo mejor (indice de enceste 0.599) de fallar siempre dado n tiros?
+
+```{r}
+tiros = 1:15
+prob = vector()
+jugador_id = 1 - jugadores[100]
+for (i in 1:length(tiros)){
+  prob[[i]] = jugador_id ^ tiros[i]
+}
+
+tibble(tiros, prob) %>% kable()
+
+```
+
+```{r}
+tiros = 1:15
+prob = vector()
+jugador_id = 1 - jugadores[99]
+for (i in 1:length(tiros)){
+  prob[[i]] = jugador_id ^ tiros[i]
+}
+tibble(tiros, prob) %>% kable()
+
+```
+
+La variable tiros sigue una distribución Bernoulli ( distribución de probabilidad discreta, dónde el valor1 (éxito) ocurre con la probabilidad p y el valor 0 (fracaso) con la probabilidad q=1-p). En este caso la distribución tiene como parámetro p='indice de enceste' de cada jugador, de acuerdo con los datos iniciales del problema. Los tiros de los jugadores y sus resultados (enceste o no_enceste) constituyen ensayos independientes, de tal forma que los resultados de los encestes de un jugador sigue una distribución binomial de parámetros *N* e *'indice de enceste'*.      
+
+Dado estas características, y por los ensayos efectuados no puede reconstruirse a posteriori la probabilidad subyacente a una distribución pues, aunque en los experimentos estmos empleando el índice de enceste para generar éxitos y fracasos, el patrón resultante es aleatorio.    
+
+## Experimentos de fracasos sucesivos en el mejor jugador
+
+Segun lo visto la probabilidad que el mejor jugador falle 4 tiros seguidos es de 0.008, mientras que la probabilidad que falle el segundo mejor es de 0.025, mucho mayor. Podemos utilizar la ventana de 4 tiros errados para eliminar jugadores.
+
+```{r}
+
+resultados  <- data.table("id" = ids_juegan)
+
+for(j in 1:1000){
+  
+   result  <- data.table("id" = ids_juegan)
+  
+  for(i in 2:5){
+    result[[i]] = mapply( ftirar, jugadores, 1)
+  }
+  
+  resultados = bind_rows(resultados, result)
+  
+}
+```
+
+
+```{r}
+resultados = resultados %>% 
+  filter(!is.na(V2)) 
+```
+
+```{r}
+ids_resumen = resultados$id
+encestes = resultados %>% select(-id) %>% rowSums()
+resumen = tibble(ids_resumen, encestes)  
+
+```
+
+```{r}
+probabilidades_encestes = resumen %>% 
+  group_by(ids_resumen, encestes) %>% 
+  summarise(cantidad = n()) %>% 
+  group_by(ids_resumen) %>% 
+  mutate(total_tiros = sum(cantidad)) %>% rowwise() %>% 
+  mutate(propor = round(cantidad/total_tiros, digits = 5))
+```
+
+## Probabilidad del jugador 100 de fallar 4 tiros consecutivos, meter 1/4, 2/4, 3/4 y 4/4 en mil intentos
+
+
+```{r}
+probabilidades_encestes[probabilidades_encestes$ids_resumen == 100, ]
+```
+## Probabilidad del jugador 99 de fallar 4 tiros consecutivos, meter 1/4, 2/4, 3/4 y 4/4 en mil intentos
+
+Testeamos este jugador pues es el seguno con mejor índice de enceste.
+
+
+```{r}
+probabilidades_encestes[probabilidades_encestes$ids_resumen == 99, ]
+```
+
+## Conclusión provisoria (en vista a la construcción de un algoritmo de búsqueda con accuracy del .99% )
+
+En las anteriores tablas vemos que mientras que la probabilidad del jugador 100 de errar 4 tiros consecutivos es de 0.005, la del jugador 99 es mucho mayor (más probable) de 0.030.    
+
+Creo que por acá hay una diferencia sistemática para armar un algoritmo de búsqueda.

@@ -11,12 +11,12 @@ gc()
 
 nexperimentos = 10
 total_aciertos = vector()
-iteraciones = 149
+iteraciones = 500
 
-jugador_id = 100
+jugador_id = 1
 
-
-for (j in 1:nexperimentos){
+# 
+# for (j in 1:nexperimentos){
 
 
 ftirar  <- function( prob, qty )
@@ -45,13 +45,14 @@ df = tibble(tiro_numero, resultado_tiro) %>%
 
 df %>% filter(tiro_numero > 10) %>% 
   ggplot(aes(x=tiro_numero, y=probabilidad_enceste)) +
-  geom_line()
+  geom_line() +
+  labs(title = str_c('Evolución del indice de enceste a medida que el jugador', jugador_id, ' tira'))
 
-df$probabilidad_enceste[iteraciones]
-
-cat(df$probabilidad_enceste[iteraciones], jugadores[jugador_id], '\n')
-
-}
+# df$probabilidad_enceste[iteraciones]
+# 
+# cat(df$probabilidad_enceste[iteraciones], jugadores[jugador_id], '\n')
+# 
+# }
 
 
 
