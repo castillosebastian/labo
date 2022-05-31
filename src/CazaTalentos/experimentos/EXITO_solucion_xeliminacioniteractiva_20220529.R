@@ -9,7 +9,7 @@ gc()
 #set.seed( 1023768)
 
 nexperimentos = 10
-tiros_iniciales = 7
+tiros_iniciales = 90
 tiros = 9
 total_aciertos = vector()
 supera_preseleccion = vector()
@@ -42,9 +42,9 @@ for (j in 1:nexperimentos){
   cantidad_tiros = vector()
   cantidad_tiros[[1]] = tiros_iniciales * 100
   
-  promedio  <- mean(tablero$tiros_totales)
-  ids_juegan = tablero$id[tablero$tiros_totales >= promedio]
-  tablero = tablero[tablero$tiros_totales >= promedio]
+  mediana  <- median(tablero$tiros_totales)
+  ids_juegan = tablero$id[tablero$tiros_totales >= mediana]
+  tablero = tablero[tablero$tiros_totales >= mediana]
   
   supera_preseleccion[[j]] = 100 %in% ids_juegan
   

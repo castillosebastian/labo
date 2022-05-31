@@ -66,6 +66,7 @@ params:
 knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
 knitr::opts_chunk$set(fig.align = 'center')
 source("Unidad0_repos_and_tools.R")
+library(dplyr)
 
 # PARA EL EXAMEN:
 #   -Trabjar en ejercicios al final del documento
@@ -163,6 +164,12 @@ dataset = 1
 results = multieda(eda_list, dataset)
 ```
 
+```{r}
+# ver diccionario datos
+```
+
+
+
 ### structure
 
 ```{r, eval=EDA}
@@ -199,6 +206,191 @@ knit_print(results)
 ```
 
 <!-- Las medianas se encuentran cerca de las medias? Si es así podemos pensar que no hay outliers evaluando cada variable por separado, a no ser que haya enmascaramiento. Ver outliers multivariados. -->
+
+### Analiso los tipos de clientes
+
+```{r}
+table(eda_list$df$clase_ternaria)
+```
+
+### Variables con NAs
+
+```{r}
+df = eda_list$df %>% select_if(is.numeric)
+df = as_tibble(df)
+```
+
+```{r}
+nas = df %>% 
+  dplyr::select(everything()) %>%  # replace to your needs
+  summarise_all(funs(sum(is.na(.)))) %>% t() 
+  
+nas = tibble(var = rownames(nas), nas = nas[, 1]) %>% filter(nas > 0) %>% arrange(desc(nas))
+
+nas %>% kable()
+```
+Excluyo columnas con muchos NAs
+
+```{r}
+var_excluir = nas %>% filter(nas > 30000) %>% .$var
+df_numeric_small = df %>% dplyr::select(-(var_excluir))
+```
+
+
+Luego de excluir coumnas con NAs, excluyo filas con Nas
+
+```{r}
+df_numeric_small = df_numeric_small %>% 
+  na.omit()
+```
+
+# PCA
+
+```{r, eval= (PCA | AI)}
+df = df_numeric_small 
+pca =  prcomp(df, center = TRUE) # trabajamos con la matriz correlacion
+```
+
+
+<!-- Cuando existe una alta correlación positiva entre todas las variables, el primer componente principal tiene todas sus coordenadas del mismo signo y puede interpretarse como un promedio ponderado de todas las variables, se interpreta como factor global de 'Tamaño'. Los restantes componentes se interpretan como factores ”de forma” y típicamente tienen coordenadas positivas y negativas, que implica que contraponen unos grupos de variables frente a otros.  -->
+
+<!-- Analizar en detalle el vector de *loadings* que forma cada componente ayuda a determinar què informaciòn aporta cada una. Por ejemplo la primera componente es el resultado de la siguiente combinación lineal de las variables, en este caso los tramos de la carrera. -->
+
+<!-- La funciòn tambièn calcula automáticamente el valor de las componentes principales para cada observaciòn o individuo del data set (principal componente score o simplemente scores) mediante la multiplicación de los datos con los loadings como sigue:  se tienen que multiplicar los eigenvectors transpuestos por los datos originales centrados y también transpuestos. -->
+
+## Varianza explicada por las CP
+
+<!-- La varianza explicada por cada componente principal (correspondiente a los eigenvalores) la obtenemos elevando al cuadrado la desviación estándar:   -->
+
+<!-- A traves de summary accedemos a los datos de varición -->
+
+```{r, eval= (PCA | AI)}
+summary(pca)
+```
+
+<!-- Tener presente que los autovalores de esta matriz corresponden a la varianza de la componente y por lo tanto debe elevarse al cuadrado el desvío estandar (fila 1) -->
+
+
+## Reprsentaciones Graficas: BIPLOT
+
+<!-- El biplot tiene la particularidad de facilitar: -->
+<!-- La interpretación de las distancias entre individuos en términos de similitud en relación a las variables consideradas.     -->
+<!-- La búsqueda de grupos o patrones.     -->
+<!-- La explicación de las componentes principales utilizando las correlaciones con las variables originales.     -->
+<!-- El estudio de las posiciones relativas de los individuos entre sí y respecto de las componentes principales graficadas.    -->
+
+
+```{r, eval= (PCA | AI)}
+biplot(x = pca, scale = 0, cex = 0.6, col = c("blue4", "brown3"))
+```
+<!-- Interpretacion: Para los vectores (variables), nos fijamos en su longitud y en el ángulo con respecto a los ejes de las componentes principales y entre ellos mismos: -->
+
+<!-- Ángulo: cuanto más paralelo es un vector al eje de una componente, más ha contribuido a la creación de la misma. Con ello obtienes información sobre qué variable(s) ha sido más determinante para crear cada componente, y si entre las variables (y cuales) hay correlaciones. Ángulos pequeños entre vectores representa alta correlación entre las variables implicadas (observaciones con valores altos en una de esas variables tendrá valores altos en la variable o variables correlacionadas); ángulos rectos representan falta de correlación, y ángulos opuestos representan correlación negativa (una observación con valores altos en una de las variables irá acompañado de valores bajos en la otra). -->
+
+<!-- Longitud: cuanto mayor la longitud de un vector relacionado con x variable (en un rango normalizado de 0 a 1), mayor variabilidad de dicha variable está contenida en la representación de las dos componentes del biplot, es decir, mejor está representada su información en el gráfico. -->
+
+<!-- Para los scores (observaciones), nos fijamos en los posibles agrupamientos. Puntuaciones próximas representan observaciones de similares características. Puntuaciones con valores de las variables próximas a la media se sitúan más cerca del centro del biplot (0, 0). El resto representan variabilidades normales o extremas (outliers).  -->
+
+## Proporciòn de Varianza Explicada
+
+```{r, eval= (PCA | AI)}
+prop_varianza = pca$sdev^2 / sum(pca$sdev^2)
+
+ggplot(data = data.frame(prop_varianza, pc = 1:length(prop_varianza)),
+       aes(x = pc, y = prop_varianza)) +
+  geom_col(width = 0.3) +
+  geom_text(label = round(prop_varianza * 100, digits = 1)) +
+  scale_y_continuous(limits = c(0,1)) +
+  theme_bw() +
+  labs(x = "Componente principal",
+       y = "Prop. de varianza explicada")
+
+```
+
+## Proporcioan acumulada en las componentes
+
+```{r, eval= (PCA | AI)}
+prop_varianza_acum <- cumsum(prop_varianza)
+
+ggplot(data = data.frame(prop_varianza_acum, pc = 1:length(prop_varianza_acum)),
+       aes(x = pc, y = prop_varianza_acum, group = 1)) +
+  geom_point() +
+  geom_line() +
+  geom_text(label = round(prop_varianza_acum * 100, digits = 1), vjust =-.5) +
+  labs(x = "Componente principal",
+       y = "Prop. varianza explicada acumulada")
+
+```
+
+## FactomineR
+
+```{r, eval= (PCA | AI)}
+pca2.nci <- PCA(X = df_numeric_small, scale.unit = TRUE, ncp = 64, graph = FALSE)
+```
+
+```{r, eval= (PCA | AI)}
+print(pca2.nci)
+```
+
+```{r, eval= (PCA | AI)}
+pca2.nci$eig
+```
+
+<!-- Como es de esperar, el eigenvalor (varianza explicada) es mayor en la primera componente que en las subsiguientes. -->
+
+```{r, eval= (PCA | AI)}
+summary(pca2.nci)
+```
+ 
+## Representacion 
+
+<!-- Cabe destacar que la representación gráfica de las observaciones y las variables es distinta: las observaciones se representan mediante sus proyecciones, mientras que las variables se representan mediante sus correlaciones. La correlación entre una componente y una variable estima la información que comparten -> loadings, por lo que las variables se pueden representar como puntos en el espacio de los componentes utilizando sus loadings como coordenadas. -->
+
+<!-- Observaciones -->
+<!-- Se muestran dos ejemplos para representar las observaciones sobre las dos primeras componentes principales: -->
+
+ 
+```{r, eval= (PCA | AI)}
+fviz_pca_ind(pca2.nci, geom.ind = "point", 
+             col.ind = "#FC4E07", 
+             axes = c(1, 2), # axes 1 y 2 se corresponden con PC1 y PC2, pudiendo escoger otros
+             pointsize = 1.5) 
+```
+ 
+## Representacion de Variables
+
+<!-- Para representar las variables sobre las dos primeras componentes principales podemos utilizar la función fviz_pca_var() del paquete factoextra. La correlación entre una variable y una componente principal se utiliza como la coordenada de dicha variable sobre la componente principal. De esta manera podemos obtener un gráfico de correlación de variables: -->
+
+```{r, eval= (PCA | AI)}
+fviz_pca_var(pca2.nci, col.var = "black",repel = TRUE)
+```
+
+Grafico muestra:
+- %varianza expliada por cada componente (dim1 y dim2)
+
+```{r, eval= (PCA | AI)}
+fviz_screeplot(pca2.nci, addlabels = TRUE)
+```
+
+## Contribuciones de las variables en los ejes
+
+las contribuciones a la inercia de los ejes sirven para detectar los variables mas relevantes en cada.
+
+```{r, eval= (PCA | AI)}
+var <- get_pca_var(pca2.nci)
+corrplot(var$cos2, is.corr=FALSE) 
+```
+ 
+## Conclusión
+
+- Considerando el criterio de Kaiser (más el ajuste derivado de las simulaciones de Montecarlo) que admite autovalores hasta 0.7, las componentes que se emplearían son: `r if(PCA | AI){as.tibble(pca2.nci$eig) %>% mutate('comp' = str_c('comp', 1:nrow(.))) %>% filter(eigenvalue >= 0.7) %>% .$comp}`.              
+
+- Considerando el criterio de variabilidad explicada del componente, eligiendo aquellas cuyo % de variabilidad no sea menor a 5%, las componentes que se emplearían son: `r if(PCA | AI){as.tibble(pca2.nci$eig) %>% mutate('comp' = str_c('comp', 1:nrow(.))) %>% rename(ptje = 'percentage of variance') %>% filter(ptje > 5) %>% .$comp}`.     
+
+
+
+
+
 
 ### Grafico Correlaciones
 

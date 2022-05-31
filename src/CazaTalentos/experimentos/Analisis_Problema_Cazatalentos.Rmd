@@ -75,11 +75,11 @@ Segun lo visto la probabilidad que el mejor jugador falle 4 tiros seguidos es de
 
 resultados  <- data.table("id" = ids_juegan)
 
-for(j in 1:1000){
+for(j in 1:139){
   
    result  <- data.table("id" = ids_juegan)
   
-  for(i in 2:5){
+  for(i in 2:6){
     result[[i]] = mapply( ftirar, jugadores, 1)
   }
   
@@ -103,20 +103,20 @@ resumen = tibble(ids_resumen, encestes)
 
 ```{r}
 probabilidades_encestes = resumen %>% 
-  group_by(ids_resumen, encestes) %>% 
+  group_by(ids_resumen, encestes, .drop=FALSE) %>% 
   summarise(cantidad = n()) %>% 
   group_by(ids_resumen) %>% 
   mutate(total_tiros = sum(cantidad)) %>% rowwise() %>% 
   mutate(propor = round(cantidad/total_tiros, digits = 5))
 ```
 
-## Probabilidad del jugador 100 de fallar 4 tiros consecutivos, meter 1/4, 2/4, 3/4 y 4/4 en mil intentos
+## Probabilidad del jugador 100 de fallar n tiros consecutivos meter 1/n, 2/n, 3/n... en mil intentos
 
 
 ```{r}
 probabilidades_encestes[probabilidades_encestes$ids_resumen == 100, ]
 ```
-## Probabilidad del jugador 99 de fallar 4 tiros consecutivos, meter 1/4, 2/4, 3/4 y 4/4 en mil intentos
+## Probabilidad del jugador 99 de fallar n tiros consecutivos, meter 1/n, 2/n, 3/n... en mil intentos
 
 Testeamos este jugador pues es el seguno con mejor índice de enceste.
 
@@ -130,3 +130,58 @@ probabilidades_encestes[probabilidades_encestes$ids_resumen == 99, ]
 En las anteriores tablas vemos que mientras que la probabilidad del jugador 100 de errar 4 tiros consecutivos es de 0.005, la del jugador 99 es mucho mayor (más probable) de 0.030.    
 
 Creo que por acá hay una diferencia sistemática para armar un algoritmo de búsqueda.
+
+O quiezar tomar el vector resultante de cantidad tota de fallos consecutivas 0/n, 1/n, 2/n, e identificar el jugador con menos cantidades de fallas, o suma de las tres proporciones con mayor fallas.
+
+
+## Viendo las posibilidad de tiros fallados en el mejor jugador
+
+Errar 11 tiros tiene una probabilidad de 0.0000018, eso quiere decir que el mejor jugado tiene una posibilidad menor a 1% en 10.000 tiros. Experimentaremos sobre esto.
+
+```{r}
+
+resultados  <- data.table("id" = 100)
+
+for(j in 1:1000){
+  
+   result  <- data.table("id" = ids_juegan)
+  
+  for(i in 2:12){
+    result[[i]] = mapply( ftirar, jugadores[100], 1)
+  }
+  
+  resultados = bind_rows(resultados, result)
+  
+}
+```
+
+
+```{r}
+resultados = resultados %>% 
+  filter(!is.na(V2)) 
+
+ids_resumen = resultados$id
+encestes = resultados %>% select(-id) %>% rowSums()
+resumen = tibble(ids_resumen, encestes)  
+
+```
+
+```{r}
+probabilidades_encestes = resumen %>% 
+  mutate(encestes = as.factor(encestes)) %>% 
+  group_by(ids_resumen, encestes, .drop=FALSE) %>% 
+  summarise(cantidad = n()) %>% 
+  group_by(ids_resumen) %>% 
+  mutate(total_tiros = sum(cantidad)) %>% rowwise() %>% 
+  mutate(propor = round(cantidad/total_tiros, digits = 5))
+```
+
+
+```{r}
+probabilidades_encestes[probabilidades_encestes$ids_resumen == 100, ]
+```
+
+## Optimizacion
+
+Tengo que generar todos los experimentos de tiros que sean posibles para hacer que el mejor jugado converga hacia su ìndice de enceste para lo cual debe desacerme de los malos jugadores. 
+

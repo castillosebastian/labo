@@ -3,10 +3,10 @@ library(purrr)
 library(dplyr)
 library(stringr)
 
-nexperimentos = 1000
+nexperimentos = 10
 total_aciertos = vector()
-tiros_preseleccion = 20
-tiros_eliminatorias = 100
+tiros_preseleccion = 4
+tiros_eliminatorias = 180
 supera_preseleccion = vector()
 
 for (j in 1:nexperimentos){

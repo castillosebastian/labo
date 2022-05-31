@@ -11,7 +11,7 @@ gc()
 #set.seed(777787)
 
 nexperimentos = 10
-primer_inter = 6 # atención las rondas comienzan en 2: o sea que los 100 tiran 1 tiro cada uno 5 veces: 100*1*5
+primer_inter = 11 # atención las rondas comienzan en 2: o sea que los 100 tiran 1 tiro cada uno 5 veces: 100*1*5
 
 # guarda resultados
 total_aciertos = vector()
@@ -43,28 +43,33 @@ for (j in 1:nexperimentos){
   ids_resumen = resultados$id
   encestes = resultados %>% select(-id) %>% rowSums()
   resumen = tibble(ids_resumen, encestes)  
+  
+  if(!(100 %in% resumen$ids_resumen)){a = 'salio 100 en ronda 1'}else{a = 'sigue 100 a ronda 2'}
+  
+  cat(a, '\n')
  
-  for(i in 7:139){
+  for(i in 12:129){
     
     resultados[[i]] = mapply( ftirar, jugadores[ids_juegan], 1)
     
-    resumen[[(i-4)]] = resultados %>% select(((i-4):i)) %>% rowSums() 
+    resumen[[(i-9)]] = resultados %>% select(((i-9):i)) %>% rowSums() 
    
   }
   
   indice_enceste = resumen %>% 
-    tidyr::pivot_longer(!ids_resumen, names_to = "rondas", values_to = "score_en_5") %>% 
-    mutate(score_en_5 = as.factor(score_en_5)) %>% 
-    group_by(ids_resumen, score_en_5, .drop=FALSE) %>% 
-    summarise(cantidad = n()) %>% 
+    tidyr::pivot_longer(!ids_resumen, names_to = "rondas", values_to = "score_en_10") %>% 
+    mutate(score_en_10 = as.factor(score_en_10)) %>% 
+    group_by(ids_resumen, score_en_10, .drop=FALSE) %>% 
+    summarise(cantidad = n()) %>% ungroup() %>% 
     group_by(ids_resumen) %>% 
     mutate(total_tiros = sum(cantidad)) %>% rowwise() %>% 
     mutate(prob = round(cantidad/total_tiros, digits = 5))
   
   indice_enceste_wort_scores = indice_enceste %>% 
-    filter(score_en_5 %in% c(0,1,2)) %>%
+    filter(score_en_10 %in% c(0,1,2)) %>%
     group_by(ids_resumen) %>% 
-    summarise(prob_worst = sum(prob, na.rm = T))
+    summarise(prob_worst = sum(prob, na.rm = T), 
+              cantidad = sum(cantidad, na.rm = T))
   
   
   total_aciertos[[j]] = indice_enceste_wort_scores$ids_resumen[which.min(indice_enceste_wort_scores$prob_worst)] == 100
