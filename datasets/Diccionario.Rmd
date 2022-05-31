@@ -1,0 +1,71 @@
+---
+title: "Diccionario_datos"
+author: "Área de Planificación Gestión y Estadística"
+date: "31/5/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+library(kableExtra)
+```
+
+```{r}
+DiccionarioDatos <- readr::read_csv("DiccionarioDatos.csv")
+
+DiccionarioDatos %>% 
+  kable(align = 'c', longtable = TRUE ) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed"),
+               full_width = F, font_size = 10) %>% 
+  column_spec(4, "10cm") %>% 
+  landscape()
+
+```
+
+
+Campos y Grupos
+
+- datos del cliente: cliente_antiguedad, cliente_edad,  
+
+- rentabilidad cliente:  mrentabilidad, mrentabilidad_annua, mcomisiones, mactivos_margen, mpasivos_margen, 
+
+- cantidad/monto de productos: cproductos, tcuentas, ccuenta_corriente y mcuenta_corriente, ccaja_ahorro y mcaja_ahorro, mcaja_ahorro_dolares, mdescubierto_preacordado, mcuentas_saldo (!), ctarjeta_debito, mautoservicio, ctarjeta_visa, ctarjeta_master, mtarjeta_master_consumo, cprestamos_personales,  mprestamos_personales, cprestamos_prendarios y mprestamos_prendarios, cprestamos_hipotecarios y mprestamos_hipotecarios, cinversion1 y minversion1_pesos, seguros (varios), ccaja_seguridad, 
+
+- movimentos cliente: ctarjeta_debito_trx, ctarjeta_visa_trx, mtarjeta_visa_consumo, ctarjeta_master_trx, cprestamos_personales, cprestamos_prendarios, cprestamos_prendarios, cprestamos_hipotecarios, cplazo_fijo, cinversion1 y minversion1_pesos y cinversion2 y minversion2_pesos (!), cpayroll_trx y cpayroll2_trx (haberes), ccuenta_debitos_automaticos y mcuenta_debitos_automaticos,  ctarjeta_visa_debitos_automaticos/mtarjeta_visa_debitos_automaticos,  ctarjeta_master_debitos_automaticos/mttarjeta_master_debitos_automaticos, cpagodeservicios y mpagodeservicios, 
+
+
+- acreditación de haberes: cpayroll_trx, mpayroll, mpayroll2
+
+- perfil uso: cpagomiscuentas y mpagomiscuentas, 
+
+
+# quedé en variable 70
+
+
+Es probable que los baja+2 sean individuos con poco movimiento y pocos productos. O estaría vinculado a saldo negativos?
+
+
+
+1) ¿Qué características tienen los clientes vip? var:cliente_vip,  
+2) Ver correlación de grupo rentabilidad y cantidad de productos con clases ternarias, 
+3) Ver correlación de mcuenta_saldo (saldo total de todas las cuentas del cliente) y clase, 
+4) Ver correlación de grupo de movimientos cliente y clase, 
+5) Ver correlacion de grupo inversion y clase, 
+6) ver Acreditacion de haberes y clase
+
+
+
+
+LIMPIEZA
+- excluir: tpaquetes*, ccuenta_corriente
+- 
+
+
+
+
+
+```{r}
+DiccionarioDatos$campo
+```
+
