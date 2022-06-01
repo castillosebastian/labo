@@ -25,7 +25,7 @@ resultados  <- data.table("id" = 1:100)
 resultado_tiro = vector()
 tiro_numero = vector()
 
-iteraciones = 139
+iteraciones = 800
 
 for(i in 1:iteraciones){
   tiro_numero[[i]] = i
@@ -39,7 +39,10 @@ df = tibble(tiro_numero, resultado_tiro) %>%
 
 df %>% filter(tiro_numero > 1) %>% 
   ggplot(aes(x=tiro_numero, y=crecimiento)) +
-  geom_line()
+  geom_line() +
+  geom_hline(yintercept=0.7, color = "red", linetype="dashed") +
+  labs(title = "Reconociendo probabilidad teórica")
+  
 
 df$crecimiento[iteraciones]
 

@@ -139,41 +139,39 @@ O quiezar tomar el vector resultante de cantidad tota de fallos consecutivas 0/n
 Errar 11 tiros tiene una probabilidad de 0.0000018, eso quiere decir que el mejor jugado tiene una posibilidad menor a 1% en 10.000 tiros. Experimentaremos sobre esto.
 
 ```{r}
-
-resultados  <- data.table("id" = 100)
-
-for(j in 1:1000){
-  
-   result  <- data.table("id" = ids_juegan)
-  
-  for(i in 2:12){
-    result[[i]] = mapply( ftirar, jugadores[100], 1)
-  }
-  
-  resultados = bind_rows(resultados, result)
-  
-}
+# resultados  <- data.table("id" = 100)
+# for(j in 1:10){
+#   
+#    result  <- data.table("id" = ids_juegan)
+#   
+#   for(i in 2:12){
+#     result[[i]] = mapply( ftirar, jugadores[100], 1)
+#   }
+#   
+#   resultados = bind_rows(resultados, result)
+#   
+# }
 ```
 
 
 ```{r}
-resultados = resultados %>% 
-  filter(!is.na(V2)) 
-
-ids_resumen = resultados$id
-encestes = resultados %>% select(-id) %>% rowSums()
-resumen = tibble(ids_resumen, encestes)  
+# resultados = resultados %>% 
+#   filter(!is.na(V2)) 
+# 
+# ids_resumen = resultados$id
+# encestes = resultados %>% select(-id) %>% rowSums()
+# resumen = tibble(ids_resumen, encestes)  
 
 ```
 
 ```{r}
-probabilidades_encestes = resumen %>% 
-  mutate(encestes = as.factor(encestes)) %>% 
-  group_by(ids_resumen, encestes, .drop=FALSE) %>% 
-  summarise(cantidad = n()) %>% 
-  group_by(ids_resumen) %>% 
-  mutate(total_tiros = sum(cantidad)) %>% rowwise() %>% 
-  mutate(propor = round(cantidad/total_tiros, digits = 5))
+# probabilidades_encestes = resumen %>% 
+#   mutate(encestes = as.factor(encestes)) %>% 
+#   group_by(ids_resumen, encestes, .drop=FALSE) %>% 
+#   summarise(cantidad = n()) %>% 
+#   group_by(ids_resumen) %>% 
+#   mutate(total_tiros = sum(cantidad)) %>% rowwise() %>% 
+#   mutate(propor = round(cantidad/total_tiros, digits = 5))
 ```
 
 
@@ -184,4 +182,42 @@ probabilidades_encestes[probabilidades_encestes$ids_resumen == 100, ]
 ## Optimizacion
 
 Tengo que generar todos los experimentos de tiros que sean posibles para hacer que el mejor jugado converga hacia su ìndice de enceste para lo cual debe desacerme de los malos jugadores. 
+
+## Reconocer la probabilidad teórica de 0.7 con 415 tiros? Porqué?
+
+Números de tiros (experimentos) donde convergen la probabilidad teórica (a priori) con la probabilidad empírica (a posterior): como se deteriman? Cual es la función?
+
+```{r}
+resultado_tiro = vector()
+tiro_numero = vector()
+
+set.seed(12346)
+iteraciones = 800
+
+for(i in 1:iteraciones){
+  tiro_numero[[i]] = i
+  resultado_tiro[[i]] = mapply(ftirar, jugadores[100], 1)
+}
+
+df = tibble(tiro_numero, resultado_tiro) %>% 
+ mutate(cumsum = cumsum(resultado_tiro)) %>% 
+  rowwise() %>% mutate(crecimiento = cumsum/tiro_numero)
+
+
+df %>% filter(tiro_numero > 1) %>% 
+  ggplot(aes(x=tiro_numero, y=crecimiento)) +
+  geom_line() +
+  geom_hline(yintercept=0.7, color = "red", linetype="dashed") +
+  labs(title = str_c("Reconociendo probabilidad teórica. Ultimo score: ",df$crecimiento[iteraciones], '.'))
+  
+```
+
+### Elemento de optimizaciòn
+
+Optimizar tiros: para optimizar tiros se necesitan eliminar jugadores. Para eso se necesita un criterio de eliminación: cantidad de aciertos (obvio). Se tiene que adoptar un criterio estricto como eliminar más pero no tan dura como para eliminar al mejor a medida que este suma experimentos y converge a su probabilidad teórica.  
+
+El criterio de eliminaciòn es le desviaciòn estaàndar en la distribuciòn binomial.  A los 50 tiros si hay un jugado que està por debajo de la **3 desviación estandar** para los 50 tiros (en esta distribuviòn binomial) no es el mejor, se fue.
+
+Suma de probabilidad de todos los jugadores. 
+
 
