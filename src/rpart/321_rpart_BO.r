@@ -26,7 +26,7 @@ hs  <- makeParamSet(
           makeIntegerParam("maxdepth" , lower=  3L  , upper=   20L),
           forbidden = quote( minbucket > 0.5*minsplit ) )             # minbuket NO PUEDE ser mayor que la mitad de minsplit
 
-ksemilla_azar  <- 777781   #cambiar por la primer semilla
+ksemilla_azar  <- 102191   #cambiar por la primer semilla
 
 #------------------------------------------------------------------------------
 #graba a un archivo los componentes de lista
@@ -140,7 +140,7 @@ EstimarGanancia  <- function( x )
 #------------------------------------------------------------------------------
 #Aqui empieza el programa
 
-setwd("~/R/labo")
+directorio = "~/R/labo"  #Establezco el Working Directory
 
 #cargo el dataset
 dataset  <- fread("./datasets/paquete_premium_202011.csv")   #donde entreno
@@ -149,8 +149,8 @@ dataset  <- fread("./datasets/paquete_premium_202011.csv")   #donde entreno
 #creo la carpeta donde va el experimento
 # HT  representa  Hiperparameter Tuning
 dir.create( "~/R/labo/exp/",  showWarnings = FALSE ) 
-dir.create( "~/R/labo/HT3210/", showWarnings = FALSE )
-setwd("~/R/labo/HT3210/")   #Establezco el Working Directory DEL EXPERIMENTO
+dir.create( "~/R/labo/exp/HT3210/", showWarnings = FALSE )
+directorio = "~/R/labo/exp/HT3210/"  #Establezco el Working Directory
 
 
 archivo_log  <- "HT321.txt"

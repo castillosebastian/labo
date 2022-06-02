@@ -15,11 +15,11 @@ dtrain  <- fread("./datasets/paquete_premium_202011.csv")
 #genero el modelo,  aqui se construye el arbol
 modelo  <- rpart("clase_ternaria ~ .",  #quiero predecir clase_ternaria a partir de el resto de las variables
                  data = dtrain,
-                 xval=0,
-                 cp=        -0.3,   #esto significa no limitar la complejidad de los splits
-                 minsplit=  80,     #minima cantidad de registros para que se haga el split. 
-                 minbucket=  16,     #tamaño minimo de una hoja. # 12, 10, 4, 2, 1. Aumento
-                 maxdepth=   14 )    #profundidad maxima del arbol. # aumento
+                 xval=5,
+                 cp=        0.01,   #esto significa no limitar la complejidad de los splits
+                 minsplit=  20,     #minima cantidad de registros para que se haga el split. 
+                 minbucket=  6,     #tamaño minimo de una hoja. # 12, 10, 4, 2, 1. Aumento
+                 maxdepth=   30 )    #profundidad maxima del arbol. # aumento
 
 #grafico el arbol
 prp(modelo, extra=101, digits=5, branch=1, type=4, varlen=0, faclen=0)

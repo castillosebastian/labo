@@ -1,13 +1,7 @@
 #Optimizacion Bayesiana de hiperparametros de  ranger  (Random Forest)
-
-
-
 # Optimizar buscando parámetros óptimos, luego buscar archivo "HT433.txt" ordenar por ganancia
 # y luego junto con ganancia vemos qué parámetros produjo eso y vamos al archivo
 # 411 ranger que el el RandomForest, coloco los parámetros y luego genero el csv subo a kaggle
-
-
-
 
 #limpio la memoria
 rm( list=ls() )  #remove all objects
@@ -26,6 +20,7 @@ require("parallel")
 require("DiceKriging")
 require("mlrMBO")
 
+setwd("~/R/labo")  #Establezco el Working Directory
 
 
 kBO_iter  <- 100   #cantidad de iteraciones de la Optimizacion Bayesiana
@@ -39,7 +34,7 @@ hs  <- makeParamSet(
           makeIntegerParam("mtry" ,             lower=    2L, upper=   50L))
 
 
-ksemilla_azar  <- 102191  #Aqui poner la propia semilla
+ksemilla_azar  <- 777781  #Aqui poner la propia semilla
 
 #------------------------------------------------------------------------------
 #graba a un archivo los componentes de lista
@@ -154,17 +149,17 @@ EstimarGanancia_ranger  <- function( x )
 #Aqui comienza el programa
 
 #Aqui se debe poner la carpeta de la computadora local
-setwd("D:\\gdrive\\UTN2022P\\")   #Establezco el Working Directory
-
+directorio = "~/R/labo"  #Establezco el Working Directory
 #cargo el dataset donde voy a entrenar el modelo
 dataset  <- fread("./datasets/paquete_premium_202011.csv", stringsAsFactors= TRUE)   #donde entreno
 
 
 #creo la carpeta donde va el experimento
 # HT  representa  Hiperparameter Tuning
-dir.create( "./labo/exp/",  showWarnings = FALSE ) 
-dir.create( "./labo/exp/HT4330/", showWarnings = FALSE )
-setwd("D:\\gdrive\\UTN2022P\\labo\\exp\\HT4330\\")   #Establezco el Working Directory DEL EXPERIMENTO
+#ir.create( "~/R/labo/exp/",  showWarnings = FALSE ) 
+dir.create( "~/R/labo/exp/HT4330/", showWarnings = FALSE )
+
+setwd("~/R/labo/exp/HT4330/")
 
 #en estos archivos quedan los resultados
 kbayesiana  <- "HT433.RDATA"
