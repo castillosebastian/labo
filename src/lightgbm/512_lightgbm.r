@@ -8,7 +8,8 @@ require("data.table")
 require("lightgbm")
 
 #Aqui se debe poner la carpeta de la computadora local
-setwd("D:\\gdrive\\UTN2022P\\")   #Establezco el Working Directory
+setwd("~/R/labo")  #Establezco el Working Directory
+
 
 #cargo el dataset donde voy a entrenar
 dataset  <- fread("./datasets/paquete_premium_202011.csv", stringsAsFactors= TRUE)
@@ -32,12 +33,12 @@ dtrain  <- lgb.Dataset( data= data.matrix(  dataset[ , campos_buenos, with=FALSE
 modelo  <- lgb.train( data= dtrain,
                       param= list( objective=        "binary",
                                    max_bin=             31,
-                                   learning_rate=        0.1,
-                                   num_iterations=      50,
-                                   num_leaves=          64,
-                                   feature_fraction=     0.5,
-                                   min_data_in_leaf=  3000,
-                                   seed=            999983 )  )
+                                   learning_rate=        0.01009,
+                                   num_iterations=      471,
+                                   num_leaves=          614,
+                                   feature_fraction=     0.4040166,
+                                   min_data_in_leaf=  943,
+                                   seed=            777781 )  )
 
 
 #aplico el modelo a los datos sin clase
@@ -56,9 +57,9 @@ prediccion  <- predict( modelo,
 entrega  <- as.data.table( list( "numero_de_cliente"= dapply[  , numero_de_cliente],
                                  "Predicted"= as.integer(prediccion > 1/60 ) )  ) #genero la salida
 
-dir.create( "./labo/exp/",  showWarnings = FALSE ) 
-dir.create( "./labo/exp/KA2512/", showWarnings = FALSE )
-archivo_salida  <- "./labo/exp/KA2512/KA_512_001.csv"
+#dir.create( "./labo/exp/",  showWarnings = FALSE ) 
+dir.create( "~/R/labo/exp/KA2512/", showWarnings = FALSE )
+archivo_salida  <- "~/R/labo/exp/KA2512/KA_512_001.csv"
 
 #genero el archivo para Kaggle
 fwrite( entrega, 
@@ -68,7 +69,7 @@ fwrite( entrega,
 
 #ahora imprimo la importancia de variables
 tb_importancia  <-  as.data.table( lgb.importance(modelo) ) 
-archivo_importancia  <- "./labo/exp/KA2512/512_importancia_001.txt"
+archivo_importancia  <- "~/R/labo/exp/KA2512/512_importancia_001.txt"
 
 fwrite( tb_importancia, 
         file= archivo_importancia, 
