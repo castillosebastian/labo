@@ -107,8 +107,8 @@ EstimarGanancia_lightgbm  <- function( x )
                           seed= 777781,
                           max_depth=  -1,         # -1 significa no limitar,  por ahora lo dejo fijo
                           min_gain_to_split= 0.0, #por ahora, lo dejo fijo
-                          lambda_l1= 0.0,         #por ahora, lo dejo fijo
-                          lambda_l2= 0.0,         #por ahora, lo dejo fijo
+                          # lambda_l1= 0.0,         #por ahora, lo dejo fijo
+                          # lambda_l2= 0.0,         #por ahora, lo dejo fijo
                           max_bin= 31,            #por ahora, lo dejo fijo
                           num_iterations= 9999,    #un numero muy grande, lo limita early_stopping_rounds
                           force_row_wise= TRUE    #para que los alumnos no se atemoricen con tantos warning
@@ -159,8 +159,8 @@ dataset  <- fread("./datasets/paquete_premium_202011.csv.gz")
 #creo la carpeta donde va el experimento
 # HT  representa  Hiperparameter Tuning
 dir.create( "./exp/",  showWarnings = FALSE ) 
-dir.create( "./exp/HT5430/", showWarnings = FALSE )
-setwd("./exp/HT5430/")   #Establezco el Working Directory DEL EXPERIMENTO
+dir.create( "./exp/HT5430_v2/", showWarnings = FALSE )
+setwd("./exp/HT5430_v2/")   #Establezco el Working Directory DEL EXPERIMENTO
 
 
 #en estos archivos quedan los resultados
