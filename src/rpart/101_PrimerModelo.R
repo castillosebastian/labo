@@ -8,7 +8,7 @@ require("rpart.plot")
 
 #Aqui se debe poner la carpeta de SU computadora local
 setwd("~/R/labo")  #Establezco el Working Directory
-
+set.seed( 777781 )
 #cargo los datos de 202011 que es donde voy a ENTRENAR el modelo
 dtrain  <- fread("./datasets/paquete_premium_202011.csv")
 

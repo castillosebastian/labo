@@ -1,5 +1,4 @@
-# XGBoost  sabor HISTOGRAMA
-# corre en la PC local
+# XGBoost  sabor original ,  cambiando algunos de los parametros
 
 #limpio la memoria
 rm( list=ls() )  #remove all objects
@@ -28,23 +27,21 @@ dtrain  <- xgb.DMatrix( data= data.matrix(  dataset[ , campos_buenos, with=FALSE
 
 #genero el modelo con los parametros por default
 modelo  <- xgb.train( data= dtrain,
-                      param= list( base_score= mean( getinfo(dtrain, "label")),
-                                   gamma=                0.0,  #por ahora, lo dejo fijo, equivalente a  min_gain_to_split
-                                   alpha=                0.0,  #por ahora, lo dejo fijo, equivalente a  lambda_l1
-                                   lambda=               0.0,  #por ahora, lo dejo fijo, equivalente a  lambda_l2
-                                   subsample=            1.0,  #por ahora, lo dejo fijo
-                                   max_depth = 0, #MUY IMPORTANTE, el default es 6
+                      param= list( base_score= mean( getinfo(dtrain, "label")), #
+                                   gamma = 0.0,#
+                                   alpha = 0.0,#
+                                   lambda = 0.0,#
+                                   subsample = 1.0,#
+                                   max_bin = 256,
+                                   max_leaves=           0,    #
+                                   max_depth = 6, #
                                    scale_pos_weight = 1.0,
                                    objective=       "binary:logistic",
-                                   tree_method=     "hist",
-                                   grow_policy=     "lossguide",
-                                   max_bin=            256,
-                                   max_leaves=          20,
                                    min_child_weight=    1,
                                    eta=                 0.3,
                                    colsample_bytree=    1
                                    ),
-                      nrounds= 1  # MUY IMPORTANTE,  la cantidad de arboles del ensemble
+                      nrounds= 34
                     )
 
 #aplico el modelo a los datos sin clase
@@ -57,11 +54,11 @@ prediccion  <- predict( modelo,
 
 #Genero la entrega para Kaggle
 entrega  <- as.data.table( list( "numero_de_cliente"= dapply[  , numero_de_cliente],
-                                 "Predicted"= as.integer( prediccion > 0.016)  ) ) #genero la salida
+                                 "Predicted"= as.integer( prediccion > 1/60 ) )  ) #genero la salida
 
-dir.create( "~/R/labo/exp/",  showWarnings = FALSE ) 
-dir.create( "~/R/labo/exp/KA5710/", showWarnings = FALSE )
-archivo_salida  <- "~/R/labo/exp/KA5710/KA_571_001.csv"
+#dir.create( "./labo/exp/",  showWarnings = FALSE ) 
+dir.create( "~/R/labo/exp/KA5610/", showWarnings = FALSE )
+archivo_salida  <- "~/R/labo/exp/KA5610/KA_561_001.csv"
 
 #genero el archivo para Kaggle
 fwrite( entrega, 

@@ -11,7 +11,7 @@ require("rlist")
 require("xgboost")
 
 
-ksemilla_azar  <- 777781   #Aqui poner la propia semilla
+ksemilla_azar  <- 777781 
 
 #------------------------------------------------------------------------------
 #graba a un archivo los componentes de lista
@@ -72,16 +72,16 @@ EstimarGanancia_xgboost  <- function( x )
                           alpha=                0.0,  #por ahora, lo dejo fijo, equivalente a  lambda_l1
                           lambda=               0.0,  #por ahora, lo dejo fijo, equivalente a  lambda_l2
                           subsample=            1.0,  #por ahora, lo dejo fijo
-                          tree_method=       "hist",  # histograma
-                          grow_policy=  "lossguide",  # lossguide
-                          max_depth=            0,    # NO lo limito por altura
+                          tree_method=       "auto",  #por ahora lo dejo fijo, pero ya lo voy a cambiar a "hist"
+                          grow_policy=  "depthwise",  #ya lo voy a cambiar a "lossguide"
                           max_bin=            256,    #por ahora fijo
+                          max_leaves=           0,    #ya lo voy a cambiar
                           scale_pos_weight=     1.0   #por ahora, lo dejo fijo
                         )
 
   param_completo  <- c( param_basicos, x )
 
-  set.seed( 777781  )
+  set.seed( 999983 )
   modelocv  <- xgb.cv( objective= "binary:logistic",
                        data= dtrain,
                        feval= fganancia_logistic_xgboost,
@@ -126,13 +126,13 @@ dataset  <- fread("./datasets/paquete_premium_202011.csv")
 
 #creo la carpeta donde va el experimento
 # HT  representa  Hiperparameter Tuning
-dir.create( "~/R/labo/exp/",  showWarnings = FALSE ) 
-dir.create( "~/R/labo/exp/HT5720/", showWarnings = FALSE )
-setwd("~/R/labo/exp/HT5720/")   #Establezco el Working Directory DEL EXPERIMENTO
+#dir.create( "./labo/exp/",  showWarnings = FALSE ) 
+dir.create( "~/R/labo/exp/HT5620/", showWarnings = FALSE )
+setwd("~/R/labo/exp/HT5620/")   #Establezco el Working Directory DEL EXPERIMENTO
 
 
 #en estos archivos quedan los resultados
-klog        <- "HT572.txt"
+klog        <- "HT562.txt"
 
 
 GLOBAL_iteracion  <- 0   #inicializo la variable global
@@ -162,7 +162,7 @@ dtrain  <- xgb.DMatrix( data=  data.matrix(  dataset[ , campos_buenos, with=FALS
 x  <- list( eta=               0.3,
             colsample_bytree=  1.0,
             min_child_weight=  1.0,
-            max_leaves=       20,
+            max_depth=         6,
             prob_corte=        1/60
           )
 
