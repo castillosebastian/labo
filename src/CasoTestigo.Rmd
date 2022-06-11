@@ -1,0 +1,2253 @@
+---
+title: 'EDA & Tests'
+author: "Claudio Sebastián Castillo"
+date: "`r format(Sys.Date(), '%d de %B de %Y') `"
+output:
+  pdf_document: 
+    number_sections: true
+    toc: true 
+    toc_depth: 3  
+linestretch: 1
+params:
+  AnalisisIntegrador: no
+  EDA: no
+  ANOVA: no
+  values:
+    label: Variable numerica
+    input: text
+    value: ''
+  categories:
+    label: Variable categorica o factor
+    input: text
+    value: ''
+  ctranformacion: no
+  ANOVA_multivar: no
+  categorieANOVAm:
+    label: Variable categorica o factor
+    input: text
+    value: ''
+  LDA: no
+  categoriesLDA:
+    label: 'LDA: Variable categorica o factor'
+    input: text
+    value: ''
+  valores_lda_nvaobs:
+    label: Valores de la nueva observaciones a clasificar
+    input: text
+    value: ''
+  QDA: no
+  categoriesQDA:
+    label: 'QDA: Variable categorica o factor'
+    input: text
+    value: ''
+  valores_qda_nvaobs:
+    label: Valores de la nueva observaciones a clasificar
+    input: text
+    value: ''
+  Regresion_Logistica: no
+  categoriesLR:
+    label: 'RL Variable categorica o factor'
+    input: text
+    value: ''
+  SVM: no
+  categoriesSVM:
+    label: 'SVM: Variable categorica o factor'
+    input: text
+    value: ''
+  valores_SVM_nvaobs:
+    label: Valores de la nueva observaciones a clasificar
+    input: text
+    value: ''
+  Clustering: no
+  PCA: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
+knitr::opts_chunk$set(fig.align = 'center')
+source("Unidad0_repos_and_tools.R")
+```
+
+```{r, params}
+AI = params$AnalisisIntegrador
+EDA = params$EDA
+ANOVA = params$ANOVA
+variable_numerica = params$values
+variable_factor = params$categories
+ctranformacion = params$ctranformacion
+options(scipen = 999) # inhabilito notacion científica
+ANOVAm = params$ANOVA_multivar
+variable_factor_anovam = params$categorieANOVAm
+LDA = params$LDA
+variable_factor_lda = params$categoriesLDA
+if (params$valores_lda_nvaobs == ''){
+  valores_lda_nvaobs <- NA
+} else {
+ valores_lda_nvaobs =  unlist(stringr::str_split(params$valores_lda_nvaobs, ","))
+}
+QDA = params$QDA
+variable_factor_qda = params$categoriesQDA
+if (params$valores_qda_nvaobs == ''){
+  valores_qda_nvaobs <- NA
+} else {
+ valores_qda_nvaobs =  unlist(stringr::str_split(params$valores_qda_nvaobs, ","))
+}
+SVM = params$SVM
+variable_factor_svm = params$categoriesSVM
+Clustering = params$Clustering
+Regresion_Logistica = params$Regresion_Logistica
+variable_factor_lr = params$categoriesLR
+PCA = params$PCA
+```
+
+```{r, tools}
+multieda <- function(list, df = 1){
+  
+  lista_resultados <- list()
+  
+  # CV = proporcion que representa el desvıo estandar de la media aritmetica
+  lista_resultados$coeficiente_variacion <- list[[df]] %>% 
+    dplyr::select_if(is.numeric) %>% 
+    summarise_all(raster::cv, na.rm =T) 
+  
+  lista_resultados$sesgo <- list[[df]] %>% 
+    dplyr::select_if(is.numeric) %>% 
+    summarise_all(moments::skewness) 
+  
+  # Las distribuciones leptocurticas tienen coeficientes superiores a 3 y las
+  # platicurticas coeficientes menores a 3
+  
+  lista_resultados$curtosis <- list[[df]] %>% 
+    dplyr::select_if(is.numeric) %>% 
+    summarise_all(moments::kurtosis)
+  
+  # Estadística Robusta
+  
+  # Median Absolute Deviation= mediana de los desvıos absolutos respecto de la mediana
+  lista_resultados$mad <- list[[df]] %>% 
+    dplyr::select_if(is.numeric) %>% 
+    summarise_all(mad)
+  
+  # grafico de correlacion
+  # lista_resultados$m_correlacion <- list[[df]] %>%
+  #   select_if(is.numeric) %>% 
+  #   cor(., use="complete.obs") %>% 
+  #   round(., 2) 
+  
+  lista_resultados
+}
+
+# Outlier detection
+# iris %>%
+#   rstatix::identify_outliers('Sepal.Width')
+
+```
+
+# EDA
+
+```{r, eval= (EDA | AI)}
+eda_list <- list()
+eda_list$df <- fread("~/R/labo/datasets/paquete_premium_202011.csv", stringsAsFactors= TRUE)
+dataset = 1
+results = multieda(eda_list, dataset)
+```
+
+```{r}
+# ver diccionario datos
+```
+
+### structure
+
+```{r, eval=EDA}
+str(eda_list[[dataset]])
+```
+
+### Summary
+
+```{r, eval=EDA}
+summary(eda_list[[dataset]]) #%>% 
+  # kable() %>% 
+  # kable_styling(full_width = F, font_size = 9) %>% 
+  # row_spec(0, angle = 90)
+```
+
+### Distribución de datos
+
+```{r, eval=EDA, fig.align='center'}
+knit_print(results)
+```
+
+<!-- Las medianas se encuentran cerca de las medias? Si es así podemos pensar que no hay outliers evaluando cada variable por separado, a no ser que haya enmascaramiento. Ver outliers multivariados. -->
+
+### Analiso los tipos de clientes
+
+```{r}
+table(eda_list$df$clase_ternaria)
+```
+
+```{r}
+df_numeric = eda_list$df %>% select_if(is.numeric)
+df_numeric = as_tibble(df_numeric)
+```
+
+```{r}
+nas = df_numeric %>%  dplyr::select(everything()) %>%  # replace to your needs
+  summarise_all(funs(sum(is.na(.)))) %>% t() 
+  
+nas = tibble(var = rownames(nas), nas = nas[, 1]) %>% filter(nas > 0) %>% arrange(desc(nas))
+nas %>% kable()
+```
+
+Campos y Grupos
+
+- datos del cliente: cliente_antiguedad, cliente_edad,  
+
+- rentabilidad cliente:  mrentabilidad, mrentabilidad_annua, mcomisiones, mactivos_margen, mpasivos_margen, 
+
+- cantidad/monto de productos: cproductos, tcuentas, ccuenta_corriente y mcuenta_corriente, ccaja_ahorro y mcaja_ahorro, mcaja_ahorro_dolares, mdescubierto_preacordado, mcuentas_saldo (!), ctarjeta_debito, mautoservicio, ctarjeta_visa, ctarjeta_master, mtarjeta_master_consumo, cprestamos_personales,  mprestamos_personales, cprestamos_prendarios y mprestamos_prendarios, cprestamos_hipotecarios y mprestamos_hipotecarios, cinversion1 y minversion1_pesos, seguros (varios), ccaja_seguridad, 
+
+- movimentos cliente: ctarjeta_debito_trx, ctarjeta_visa_trx, mtarjeta_visa_consumo, ctarjeta_master_trx, cprestamos_personales, cprestamos_prendarios, cprestamos_prendarios, cprestamos_hipotecarios, cplazo_fijo, cinversion1 y minversion1_pesos y cinversion2 y minversion2_pesos (!), cpayroll_trx y cpayroll2_trx (haberes), ccuenta_debitos_automaticos y mcuenta_debitos_automaticos,  ctarjeta_visa_debitos_automaticos/mtarjeta_visa_debitos_automaticos,  ctarjeta_master_debitos_automaticos/mttarjeta_master_debitos_automaticos, cpagodeservicios y mpagodeservicios, 
+
+- acreditación de haberes: cpayroll_trx, mpayroll, mpayroll2
+
+- perfil uso: cpagomiscuentas y mpagomiscuentas, 
+
+
+# quedé en variable 70
+
+Es probable que los baja+2 sean individuos con poco movimiento y pocos productos. O estaría vinculado a saldo negativos?
+
+1) ¿Qué características tienen los clientes vip? var:cliente_vip,  
+2) Ver correlación de grupo rentabilidad y cantidad de productos con clases ternarias, 
+3) Ver correlación de mcuenta_saldo (saldo total de todas las cuentas del cliente) y clase, 
+4) Ver correlación de grupo de movimientos cliente y clase, 
+5) Ver correlacion de grupo inversion y clase, 
+6) ver Acreditacion de haberes y clase
+
+LIMPIEZA
+- excluir: tpaquetes*, ccuenta_corriente
+
+
+
+### Target, Variables y Relaciones
+
+```{r}
+
+var_
+
+
+```
+
+
+
+```{r}
+
+var_target = eda_list$df %>% select(clase_ternaria) %>% 
+  mutate(clase_ternaria = case_when(
+    clase_ternaria == "CONTINUA"  ~ 1,
+    clase_ternaria == 'BAJA+2' | clase_ternaria == 'BAJA+1' ~ 0))
+
+var_fmovimientos = c("ctarjeta_debito_trx", "ctarjeta_visa_trx", "mtarjeta_visa_consumo", "ctarjeta_master_trx", "cprestamos_personales", "cprestamos_prendarios", "cprestamos_prendarios", "cprestamos_hipotecarios", "cplazo_fijo", "cinversion1", "minversion1_pesos", "cinversion2", "minversion2", "cpayroll_trx", "cpayroll2_trx",  "ccuenta_debitos_automaticos", "mcuenta_debitos_automaticos", "ctarjeta_visa_debitos_automaticos", "mtarjeta_visa_debitos_automaticos", "ctarjeta_master_debitos_automaticos", "mttarjeta_master_debitos_automaticos", "cpagodeservicios", "mpagodeservicios")
+  
+
+df_numeric_cor = df_numeric %>% bind_cols(var_target) %>% 
+  select(var_fmovimientos) %>% 
+  cor(., use="complete.obs") %>%
+  round(., 2)
+  
+corrplot(df_numeric_cor, type = "upper", tl.pos = "td",
+         method = "circle", tl.cex = 0.5, tl.col = 'black',
+         order = "hclust", diag = FALSE)
+```
+
+
+
+
+
+
+
+
+
+
+### Excluyo columnas con muchos NAs
+
+```{r}
+var_excluir = nas %>% filter(nas > 30000) %>% .$var
+df_numeric_small = df %>% dplyr::select(-(var_excluir))
+```
+
+
+Luego de excluir coumnas con NAs, excluyo filas con Nas
+
+```{r}
+df_numeric_small = df_numeric_small %>% 
+  na.omit()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+# PCA
+
+```{r, eval= (PCA | AI)}
+df = df_numeric_small 
+pca =  prcomp(df, center = TRUE) # trabajamos con la matriz correlacion
+```
+
+
+<!-- Cuando existe una alta correlación positiva entre todas las variables, el primer componente principal tiene todas sus coordenadas del mismo signo y puede interpretarse como un promedio ponderado de todas las variables, se interpreta como factor global de 'Tamaño'. Los restantes componentes se interpretan como factores ”de forma” y típicamente tienen coordenadas positivas y negativas, que implica que contraponen unos grupos de variables frente a otros.  -->
+
+<!-- Analizar en detalle el vector de *loadings* que forma cada componente ayuda a determinar què informaciòn aporta cada una. Por ejemplo la primera componente es el resultado de la siguiente combinación lineal de las variables, en este caso los tramos de la carrera. -->
+
+<!-- La funciòn tambièn calcula automáticamente el valor de las componentes principales para cada observaciòn o individuo del data set (principal componente score o simplemente scores) mediante la multiplicación de los datos con los loadings como sigue:  se tienen que multiplicar los eigenvectors transpuestos por los datos originales centrados y también transpuestos. -->
+
+## Varianza explicada por las CP
+
+<!-- La varianza explicada por cada componente principal (correspondiente a los eigenvalores) la obtenemos elevando al cuadrado la desviación estándar:   -->
+
+<!-- A traves de summary accedemos a los datos de varición -->
+
+```{r, eval= (PCA | AI)}
+summary(pca)
+```
+
+<!-- Tener presente que los autovalores de esta matriz corresponden a la varianza de la componente y por lo tanto debe elevarse al cuadrado el desvío estandar (fila 1) -->
+
+
+## Reprsentaciones Graficas: BIPLOT
+
+<!-- El biplot tiene la particularidad de facilitar: -->
+<!-- La interpretación de las distancias entre individuos en términos de similitud en relación a las variables consideradas.     -->
+<!-- La búsqueda de grupos o patrones.     -->
+<!-- La explicación de las componentes principales utilizando las correlaciones con las variables originales.     -->
+<!-- El estudio de las posiciones relativas de los individuos entre sí y respecto de las componentes principales graficadas.    -->
+
+
+```{r, eval= (PCA | AI)}
+biplot(x = pca, scale = 0, cex = 0.6, col = c("blue4", "brown3"))
+```
+<!-- Interpretacion: Para los vectores (variables), nos fijamos en su longitud y en el ángulo con respecto a los ejes de las componentes principales y entre ellos mismos: -->
+
+<!-- Ángulo: cuanto más paralelo es un vector al eje de una componente, más ha contribuido a la creación de la misma. Con ello obtienes información sobre qué variable(s) ha sido más determinante para crear cada componente, y si entre las variables (y cuales) hay correlaciones. Ángulos pequeños entre vectores representa alta correlación entre las variables implicadas (observaciones con valores altos en una de esas variables tendrá valores altos en la variable o variables correlacionadas); ángulos rectos representan falta de correlación, y ángulos opuestos representan correlación negativa (una observación con valores altos en una de las variables irá acompañado de valores bajos en la otra). -->
+
+<!-- Longitud: cuanto mayor la longitud de un vector relacionado con x variable (en un rango normalizado de 0 a 1), mayor variabilidad de dicha variable está contenida en la representación de las dos componentes del biplot, es decir, mejor está representada su información en el gráfico. -->
+
+<!-- Para los scores (observaciones), nos fijamos en los posibles agrupamientos. Puntuaciones próximas representan observaciones de similares características. Puntuaciones con valores de las variables próximas a la media se sitúan más cerca del centro del biplot (0, 0). El resto representan variabilidades normales o extremas (outliers).  -->
+
+## Proporciòn de Varianza Explicada
+
+```{r, eval= (PCA | AI)}
+prop_varianza = pca$sdev^2 / sum(pca$sdev^2)
+
+ggplot(data = data.frame(prop_varianza, pc = 1:length(prop_varianza)),
+       aes(x = pc, y = prop_varianza)) +
+  geom_col(width = 0.3) +
+  geom_text(label = round(prop_varianza * 100, digits = 1)) +
+  scale_y_continuous(limits = c(0,1)) +
+  theme_bw() +
+  labs(x = "Componente principal",
+       y = "Prop. de varianza explicada")
+
+```
+
+## Proporcioan acumulada en las componentes
+
+```{r, eval= (PCA | AI)}
+prop_varianza_acum <- cumsum(prop_varianza)
+
+ggplot(data = data.frame(prop_varianza_acum, pc = 1:length(prop_varianza_acum)),
+       aes(x = pc, y = prop_varianza_acum, group = 1)) +
+  geom_point() +
+  geom_line() +
+  geom_text(label = round(prop_varianza_acum * 100, digits = 1), vjust =-.5) +
+  labs(x = "Componente principal",
+       y = "Prop. varianza explicada acumulada")
+
+```
+
+## FactomineR
+
+```{r, eval= (PCA | AI)}
+pca2.nci <- PCA(X = df_numeric_small, scale.unit = TRUE, ncp = 64, graph = FALSE)
+```
+
+```{r, eval= (PCA | AI)}
+print(pca2.nci)
+```
+
+```{r, eval= (PCA | AI)}
+pca2.nci$eig
+```
+
+<!-- Como es de esperar, el eigenvalor (varianza explicada) es mayor en la primera componente que en las subsiguientes. -->
+
+```{r, eval= (PCA | AI)}
+summary(pca2.nci)
+```
+ 
+## Representacion 
+
+<!-- Cabe destacar que la representación gráfica de las observaciones y las variables es distinta: las observaciones se representan mediante sus proyecciones, mientras que las variables se representan mediante sus correlaciones. La correlación entre una componente y una variable estima la información que comparten -> loadings, por lo que las variables se pueden representar como puntos en el espacio de los componentes utilizando sus loadings como coordenadas. -->
+
+<!-- Observaciones -->
+<!-- Se muestran dos ejemplos para representar las observaciones sobre las dos primeras componentes principales: -->
+
+ 
+```{r, eval= (PCA | AI)}
+fviz_pca_ind(pca2.nci, geom.ind = "point", 
+             col.ind = "#FC4E07", 
+             axes = c(1, 2), # axes 1 y 2 se corresponden con PC1 y PC2, pudiendo escoger otros
+             pointsize = 1.5) 
+```
+ 
+## Representacion de Variables
+
+<!-- Para representar las variables sobre las dos primeras componentes principales podemos utilizar la función fviz_pca_var() del paquete factoextra. La correlación entre una variable y una componente principal se utiliza como la coordenada de dicha variable sobre la componente principal. De esta manera podemos obtener un gráfico de correlación de variables: -->
+
+```{r, eval= (PCA | AI)}
+fviz_pca_var(pca2.nci, col.var = "black",repel = TRUE)
+```
+
+Grafico muestra:
+- %varianza expliada por cada componente (dim1 y dim2)
+
+```{r, eval= (PCA | AI)}
+fviz_screeplot(pca2.nci, addlabels = TRUE)
+```
+
+## Contribuciones de las variables en los ejes
+
+las contribuciones a la inercia de los ejes sirven para detectar los variables mas relevantes en cada.
+
+```{r, eval= (PCA | AI)}
+var <- get_pca_var(pca2.nci)
+corrplot(var$cos2, is.corr=FALSE) 
+```
+ 
+## Conclusión
+
+- Considerando el criterio de Kaiser (más el ajuste derivado de las simulaciones de Montecarlo) que admite autovalores hasta 0.7, las componentes que se emplearían son: `r if(PCA | AI){as.tibble(pca2.nci$eig) %>% mutate('comp' = str_c('comp', 1:nrow(.))) %>% filter(eigenvalue >= 0.7) %>% .$comp}`.              
+
+- Considerando el criterio de variabilidad explicada del componente, eligiendo aquellas cuyo % de variabilidad no sea menor a 5%, las componentes que se emplearían son: `r if(PCA | AI){as.tibble(pca2.nci$eig) %>% mutate('comp' = str_c('comp', 1:nrow(.))) %>% rename(ptje = 'percentage of variance') %>% filter(ptje > 5) %>% .$comp}`.     
+
+
+
+
+
+
+### Grafico Correlaciones
+
+```{r}
+# corrplot.mixed(results$m_correlacion, order = 'AOE')
+```
+
+### Boxplot variables numericas
+
+```{r, eval=EDA}
+# boxplot(eda_list[[dataset]] %>% select_if(is.numeric))
+    
+```
+
+<!-- Hay outliers univariados? -->
+
+### Multigráficos
+
+```{r, eval=EDA, fig.width=20, fig.height=18}
+# eda_list[[dataset]][,-1] %>%
+#   GGally::ggpairs(., mapping = aes(color = as.factor(Campeón)), upper=list(wrap=list(size=20))) + ###### RENOMBRAR VARIABLE DE GRUPO
+#   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+#   theme_bw()
+```
+
+<!-- Se grafica las relaciones del dataset, por grupos. En el cuadro del Grupo se observan las proporciones de observaciones.  Los boxplot muestras las distintas distribuciones por grupo y presencia de outliers univariados.Los dispersogramas muestras asociacioens en datos. En los histogramas y gráficos de densidad se ven las diferencias o no entre los grupos. Finalmente las correlaciones hablan de asociacicion: Las correlaciones de las variables numéricas no son fuertes o son fuertes?. -->
+
+<!-- Salidas: -->
+<!-- -is the data set 'tidy'      -->
+<!-- -Check whether or not there are any missing values       -->
+<!-- -Spend some time thinking about the variables in the data set. Which ones are relevant to the question in hand? If appropriate, decide which variable is the dependent variable (the ‘y’ variable) and which variable(s) is (are) the independent variable(s)? What kind of variables are we dealing with—ratio or interval scale numeric variables, ordinal or nominal categorical variables?.     -->
+<!-- -Visualizar -->
+
+<!-- coefciente de variacion: porcentaje, cuando más bajo sea el valor porcentual del CV menor dispersión se encuentran en los datos. -->
+<!-- sesgo (simetria=campana, asimetría izquierda = cola izquierda, asimetría derecha=cola derecha. IMPORTANTE pues la asimetría sugiere falta de normalidad ) y curtosis (compara en relaciòn a distribucion normal, muy junto al centro o achatado) se relacionan con cuadros de densidad.  -->
+<!-- La desviación media absoluta (DMA o MAD por sus siglas en inglés) de un conjunto de datos es la distancia promedio entre cada valor y el promedio. La desviación media absoluta es una manera de describir la variación en un conjunto de datos. -->
+
+\pagebreak
+# ANOVA
+
+<!-- # EJERCICIO X -->
+
+<!-- Análisis de las medias de dos o más grupos. -->
+
+<!-- **H0:** las medias son iguales entre los grupos . Bajo la hipótesis nula de que las observaciones de los distintos grupos proceden todas de la misma población (tienen la misma media y varianza), la varianza ponderada entre grupos será la misma que la varianza promedio dentro de los grupos. -->
+
+<!-- **H1:** Al menos un par de medias son significativamente distintas la una de la otra -->
+
+<!-- **Requisitos:** -->
+
+<!-- - distribuciones normales -->
+
+<!-- - independientes entre si, y -->
+
+<!-- - igual varianza (homosedásticas) -->
+
+<!-- Si los supuestos no se satisface se pueden aplicar trasnformaciones para intentar aproximarnos a la normalidad en la distribución de los datos o bien aplicar técnicas no paramétricas que no tengan aquellos supuestos. -->
+
+<!-- Sin son pocos datos no puedo utilizar anova poque no puedo testear normalidad. -->
+
+
+## Datos
+
+```{r, anova1, eval=(ANOVA | AI)}
+df <- read_csv("~/R/research_tools/utn_analisis_inteligente_datos/te.csv")
+# manual enter data
+# GrupoA=c(25,36,36,25,36,16,25,36,49,36,25)
+# GrupoB=c(121,36,36,64,36,81,49,25,64,49,121)
+# GrupoC=c(81,81,36,9,25,36,9,49,169,1,81)
+# GrupoD=c(25,25,36,25,36,25,25,25,25,25,25)
+# Tiempos=cbind(GrupoA,GrupoB,GrupoC,GrupoD)
+# df=data.frame("Grupos"=factor(c(rep(1,11),rep(2,11),rep(3,11),rep(4,11))),
+#                   "Tiempos"=c(GrupoA,GrupoB,GrupoC,GrupoD))
+
+#datos <- readxl::read_excel("futbol.xlsx")
+```
+
+```{r, anova2, eval=(ANOVA | AI)}
+str(df) 
+```
+
+```{r, anova3, eval=(ANOVA | AI)}
+head(df) 
+```
+
+## Observaciones por grupo:
+
+```{r, anova4, eval=(ANOVA | AI)}
+observaciones <- df %>% 
+  group_by(df[[{{variable_factor}}]]) %>% 
+  summarise(n())
+observaciones
+```
+
+## Se cumplen los supuestos para su implementación?
+
+<!-- **Boxplot para ver distribución de datos** -->
+
+<!-- - Identificar asimetrías(sesgo a uno de los lados) -->
+
+<!-- - Datos atipicos -->
+
+<!-- - Diferencia de varianzas -->
+
+<!-- - Homocedasticidad     -->
+
+```{r, anova5, eval=(ANOVA | AI)}
+ggplot(data = df, aes(x = df[[{{variable_factor}}]], y = df[[{{variable_numerica}}]], fill = as.factor(df[[{{variable_factor}}]])))+
+ geom_boxplot()+
+ geom_point(position = position_jitter(0.1))
+```
+
+<!-- **Evaluación Parcial** Existen diferencias entre las distribuciones de datos de cada organismo? ver: Las cajas no solo se ubican en rangos distintos? abarcan distintos valores según el órgano? Bajo estas condiciones deberíamos sospechar que no hay homosedasticidad. -->
+
+<!-- **QQplots** -->
+
+<!-- Si se tuviese una muestra distribuída perfectamente normal, se esperaría que los puntos estuviesen perfectamente alineados con la línea de referencia, sin embargo, las muestran con las que se trabajan en la práctica casi nunca presentan este comportamiento aún si fueron obtenidas de una población normal. En la práctica se aceptan alejamientos del patrón lineal para aceptar que los datos si provienen de una población normal. -->
+
+<!-- El gráfico de Q-Q, donde “Q” representa cuantil, es un enfoque gráfico ampliamente utilizado para evaluar el acuerdo entre dos distribuciones de probabilidad. Cada eje se refiere a los cuantiles de distribuciones de probabilidad a comparar, donde uno de los ejes indica cuantiles teóricos (cuantiles hipotéticos) y el otro indica los cuantiles observados. Si los datos observados cumplen con la distribución hipotética (normalidad), los puntos en el gráfico Q-Q se encontrarán aproximadamente en la línea y = x. -->
+
+
+```{r, anova6, eval=(ANOVA | AI)}
+ggplot(data = df, aes(sample = df[[{{variable_numerica}}]], colour = as.factor(df[[{{variable_factor}}]])))+
+  stat_qq(show.legend = F)+
+  stat_qq_line()+
+  facet_wrap(.~ as.factor(df[[{{variable_factor}}]]))
+```
+
+## Anova
+
+```{r, anova7, eval=(ANOVA | AI)}
+values = df[[{{variable_numerica}}]]
+values
+```
+
+```{r, anova8, eval=(ANOVA | AI)}
+# factorizo variable factor
+fact = as.factor(df[[{{variable_factor}}]]) 
+fact
+
+```
+
+### fit del modelo
+
+```{r, anova9, eval=(ANOVA | AI)}
+if(ctranformacion){
+  bm = MASS::boxcox(lm(values~fact)) 
+  lambda= bm$x
+  lik= bm$y
+  bcm=cbind(lambda,lik)
+  bcm[order(lik),]
+  lamvalue=bm$x[which(bm$y==max(bm$y))]
+  df[[{{variable_numerica}}]] = values^lamvalue
+  df_anova =  aov(values ~ fact, data = df )
+} else{
+  df_anova =  aov(values ~ fact, data = df )  
+}
+```
+
+```{r, anova10, eval=(ANOVA | AI)}
+summary(df_anova) 
+```
+
+### coeficientes
+
+```{r, anova11, eval=(ANOVA | AI)}
+df_anova$coefficients
+```
+
+### p-value
+
+```{r, anova12, eval=(ANOVA | AI)}
+p_value <- summary(df_anova)[[1]][1,5]
+p_value
+```
+
+### F-value
+
+```{r, anova13, eval=(ANOVA | AI)}
+summary(df_anova)[[1]][1,4]
+```
+
+### Plot ANOVA
+
+```{r, anova14, eval=(ANOVA | AI)}
+plot(df_anova)
+```
+
+### Conclusión
+
+```{r, anova15, , eval=(ANOVA | AI), class.output="bg-warning"}
+if(p_value<0.05){'H0 debe rechazarse, al menos dos medias son distintas a nivel de significancia 0.05.'} else{'No hay evidencia para rechazar H0, las medias son iguales'}
+
+```
+<!-- Antes de aceptar el resultado, debemos confirmar que los supuestos del contraste se satisfacen con el objeto de ver si la conclusión es válida. Para ello se realiza el diagnóstico del modelo que será desarrollado en la próxima sección. -->
+
+<!-- ¿Por qué se rechaza para valores grandes del estadístico? O equivalentemente, ¿por qué se trata de una prueba unilateral derecha? La respuesta se basa en que estamos comparando dos estimadores de la misma varianza, en el numerador utilizamos las diferencias entre las medias de los grupos y la media general, mientras que en el denominador amalgamamos las varianzas estimadas para cada subgrupo. El hecho de que el numerador sea mucho mayor que el denominador indica que las medias son muy distintas entre sí.p252 -->
+
+## Testear homosedasticidad
+
+Test de Levene
+<!-- Test de Levene: que no es sensible a la falta de normalidad o a la presencia de valores atípicos -->
+<!-- El test de Levene realiza un nuevo análisis de la varianza para los valores absolutos de -->
+<!-- los residuos de las observaciones respecto de la mediana, o la media, de su grupo. -->
+
+```{r, anova16, eval=(ANOVA | AI)}
+ltest = car::leveneTest(y = df[[{{variable_numerica}}]], group = df[[{{variable_factor}}]], center = 'median')
+ltest
+```
+
+```{r, anova17, eval=(ANOVA | AI), class.output="bg-warning"}
+if(ltest$`Pr(>F)`[1]<0.05){'H0 debe rechazarse: no se cumple supuesto de homosedasticidad'} else {'No hay evidencia para rechazar H0, luego los datos son homosedásticos'}
+```
+
+Test de Bartlett
+
+*sensibilidad al supuesto de normalidad*
+
+```{r, anova18, eval=(ANOVA | AI)}
+btest = bartlett.test(df[[{{variable_numerica}}]] ~ df[[{{variable_factor}}]])
+btest
+```
+
+```{r, anova19, eval=(ANOVA | AI), class.output="bg-warning"}
+if(btest$p.value<0.05){'H0 debe rechazarse: no se cumple supuesto de homosedasticidad'} else {'No hay evidencia para rechazar H0, luego los datos son homosedásticos'}
+```
+
+## Testear normalidad
+
+<!-- Si los grupos tienen mas de *50 observaciones* se emplea el test de Kolmogorov-Smirnov con la corrección de Lilliefors. Si fuesen menos de 50 eventos por grupo se emplearía el test Shapiro-Wilk. -->
+
+```{r, anova20, eval=(ANOVA | AI), class.output="bg-warning"}
+
+if(observaciones[[2]][[1]] > 50) {
+  
+  #Opcion 1 (Muestras n>=50) Lilliefors - Kolmogorov
+  lillietest = lillie.test(df_anova$residuals)
+  print(lillietest)
+  if(lillietest$p.value<0.05){'H0 debe rechazarse: no hay normalidad'} else {'No hay evidencia para rechazar H0, luego los datos son normales'}
+  
+} else {
+  # Opcion 2 (Muestras n<=50) Shapirol - Wilks
+  shapirotest = shapiro.test(residuals(df_anova))
+  print(shapirotest)
+  if(shapirotest$p.value<0.05){'H0 debe rechazarse: no hay normalidad'} else {'No hay evidencia para rechazar H0, luego los datos son normales'}
+}
+
+```
+
+## Testear normalidad analizando residuos
+
+<!-- Analizar el cumplimiento del supuesto de normalidad de la distribución de los residuos equivale a analizar el supuesto de normalidad de la distribución de la variable original. -->
+
+```{r, anova21, eval=(ANOVA | AI)}
+adtest <- nortest::ad.test(residuals(df_anova)) # The Anderson-Darling test
+adtest
+```
+
+```{r, anova22, eval=(ANOVA | AI), class.output="bg-warning"}
+ if(adtest$p.value<0.05){'H0 debe rechazarse: no hay normalidad'} else {'No hay evidencia para rechazar H0, luego los datos son normales'}
+```
+
+```{r, anova23, eval=(ANOVA | AI)}
+agostinotest = moments::agostino.test(residuals(df_anova))
+agostinotest
+```
+
+```{r, anova24, eval=(ANOVA | AI), class.output="bg-warning"}
+ if(agostinotest$p.value<0.05){'H0 debe rechazarse: no hay normalidad'} else {'No hay evidencia para rechazar H0, luego los datos son normales'}
+```
+
+
+<!-- ¿Qué debe hacerse si los residuos no son normales o resultan heterocedásticos? Una primera opción es transformar los datos para que se cumplan los dos supuestos. (Ejecutar con transformación implementada BoxCox) -->
+
+
+## Anova y después: post-hoc
+
+<!-- Cuando se rechaza la hipótesis nula es natural seguir la exploración para determinar cuáles medias son diferentes. Esta exploración se denominan *comparaciones a posteriori o post-hoc*. -->
+
+## Tukey's Honest Significant Differences (HSD)
+
+```{r, anova25, eval=(ANOVA | AI)}
+TukeyHSD(df_anova)
+```
+
+```{r, anova26, eval=(ANOVA | AI)}
+plot(TukeyHSD(df_anova))
+```
+
+## Cuando ANOVA no funciona: test de Kruskal-Wallis
+
+<!-- El test de Kruskal-Wallis, también conocido como test H, es la alternativa no paramétrica al test ANOVA de una vía para datos no pareados. Se trata de una extensión del test de Mann-Whitney para más de dos grupos. Es por lo tanto de un test que emplea rangos para contrastar la hipótesis de que k muestras han sido obtenidas de una misma población. -->
+
+<!-- A diferencia del ANOVA en el que se comparan medias, el test de Kruskal-Wallis contrasta si las diferentes muestras están equidistribuidas y que por lo tanto pertenecen a una misma distribución (población). Bajo ciertas simplificaciones puede considerarse que el test de Kruskal-Wallis compara las medianas. -->
+
+<!-- H0: todas las muestras provienen de la misma población (distribución).     -->
+
+<!-- HA: Al menos una muestra proviene de una población con una distribución distinta  -->
+
+```{r, anova27, eval=(ANOVA | AI)}
+kruskaltest = kruskal.test( values ~ fact, data = df)
+kruskaltest
+```
+
+```{r, anova28, eval=(ANOVA | AI), class.output="bg-warning"}
+ if(kruskaltest$p.value<0.05){'H0 debe rechazarse: se encuentra significancia en la diferencia de al menos dos grupos'} else {'No hay evidencia para rechazar H0, las poblaciones tienen la misma posición central'}
+```
+
+```{r, anova29, eval=(ANOVA | AI)}
+#pairwise.wilcox.test(x = values, g = fact, p.adjust.method = "holm" )
+pgirmess::kruskalmc(values ~ fact)
+```
+
+<!-- Test KW no requiere homosedasticidad: Kruskal-Wallis is used when researchers are comparing three or more independent groups on a continuous outcome, but the assumption of homogeneity of variance between the groups is violated in the ANOVA analysis. The Kruskal-Wallis test is robust to violations of this statistical assumption. https://www.scalestatistics.com/kruskal-wallis-and-homogeneity-of-variance.html -->
+
+\pagebreak
+# ANOVA_multivariante
+
+## Datos
+
+```{r, eval=(ANOVAm | AI)}
+# subject <- as.factor(c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17,
+#                        18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30))
+sex <- c("female", "male", "male", "female", "male", "male", "male", "female",
+         "female", "male", "male", "male", "male", "female", "female", "female",
+         "male", "female", "female", "male", "male", "female", "male", "male",
+         "male", "male", "male", "male", "female", "male" )
+age <- c("adult", "adult", "adult", "adult", "adult", "adult", "young", "young",
+         "adult", "young", "young", "adult", "young", "young", "young", "adult",
+         "young", "adult", "young", "young", "young", "young", "adult", "young",
+         "young", "young", "young", "young", "young", "adult")
+result <- c(7.1, 11.0, 5.8, 8.8, 8.6, 8.0, 3.0, 5.2, 3.4, 4.0, 5.3, 11.3, 4.6, 6.4,
+            13.5, 4.7, 5.1, 7.3, 9.5, 5.4, 3.7, 6.2, 10.0, 1.7, 2.9, 3.2, 4.7, 4.9,
+            9.8, 9.4)
+
+datos <- data.frame(#subject,
+                    sex, age, result)
+
+datos[[{{variable_factor_anovam}}]] = as.integer(datos[[{{variable_factor_anovam}}]])
+                                             
+head(datos, 4)
+```
+
+## Gafico
+
+```{r, eval=(ANOVAm | AI)}
+ggplot(data = datos, mapping = aes(x = age, y = result, colour = sex)) +
+   geom_boxplot() +
+   theme_bw()
+
+```
+
+## Test Anovam
+
+```{r, eval=(ANOVAm | AI)}
+anova_2vias <- aov(formula = result ~ sex*age, data = datos)
+s = summary(anova_2vias)
+s
+```
+
+```{r, eval=(ANOVAm | AI), class.output="bg-warning"}
+if(any(s[[1]][["Pr(>F)"]] < 0.05)){'La varianza presenta diferencias significativas entre los grupos'} else {'La varianza no presenta diferencia significativa entre los grupos'}
+```
+
+## Tamaño del efecto
+
+Bajo la siguiente escala del efecto: .01: Small effect size .06: Medium effect size .14 or higher: Large effect size, tenemos:
+
+```{r, eval=(ANOVAm | AI)}
+efecto = lsr::etaSquared(anova_2vias)
+efecto
+```
+
+```{r, eval=(ANOVAm | AI)}
+efecto_medio = rownames(efecto)[efecto[,1] >= 0.06 & efecto[,1] < 0.14 ] 
+if(length(efecto_medio) >=1){str_c('efecto medio en:', efecto_medio)} else {'No hay efecto medio'}
+```
+
+```{r, eval=(ANOVAm | AI)}
+efecto_grande = rownames(efecto)[efecto[,1] >= 0.14]
+if(length(efecto_grande) >=1){str_c('Efecto grande en:', efecto_grande)} else {'No hay efecto grande'}
+```
+
+## Cumplimiento requisitos ANOVAM
+
+```{r, eval=(ANOVAm | AI)}
+par(mfrow = c(1,2))
+plot(anova_2vias)
+```
+
+\pagebreak
+# Analisis Discriminante Lineal (LDA)
+
+<!-- # artículo: https://www.cienciadedatos.net/documentos/28_linear_discriminant_analysis_lda_y_quadratic_discriminant_analysis_qda#Ejemplo_datos_insectos -->
+
+
+<!-- El Análisis Discriminante Lineal o Linear Discrimiant Analysis (LDA) es un método de clasificación supervisado de variables cualitativas en el que dos o más grupos son conocidos a priori y nuevas observaciones se clasifican en uno de ellos en función de sus características. -->
+
+<!-- # Requisitos    -->
+
+<!-- - Cada predictor que forma parte del modelo se distribuye de forma normal en cada una de las clases de la variable respuesta. En el caso de múltiples predictores, las observaciones siguen una distribución normal multivariante en todas las clases.    -->
+
+<!-- - La varianza del predictor es igual en todas las clases de la variable respuesta. En el caso de múltiples predictores, la matriz de covarianza es igual en todas las clases. Si esto no se cumple se recurre a Análisis Discriminante Cuadrático (QDA).     -->
+
+<!-- # LDA_1predictor vs LDA_multiples_predictores -->
+
+<!-- La diferencia reside en que X, en lugar de ser un único valor, es un vector formado por el valor de p predictores X=(X1,X2,...,X3) y que, en lugar de proceder de una distribución normal, procede de una distribución normal multivariante. -->
+
+<!-- Un vector sigue una distribución k-normal multivariante si cada uno de los elementos individuales que lo forman sigue una distribución normal y lo mismo para toda combinación lineal de sus k elementos. -->
+
+<!-- # LDA vs Regresion Logística -->
+
+<!-- Es una alternativa a la regresión logística cuando la variable cualitativa tiene más de dos niveles. Si bien existen extensiones de la regresión logística para múltiples clases, el LDA presenta una serie de ventajas: -->
+
+<!-- - Si las clases están bien separadas, los parámetros estimados en el modelo de regresión logística son inestables. El método de LDA no sufre este problema.     -->
+
+<!-- - Si el número de observaciones es bajo y la distribución de los predictores es aproximadamente normal en cada una de las clases, LDA es más estable que la regresión logística.    -->
+
+<!-- Al observar la normalidad puede suceder que, si los datos tienen una distribución normal multivariante, entonces, cada una de las variables tiene una distribución normal univariante; pero lo opuesto no tiene que ser verdad. -->
+
+<!-- Normalidad multivariada => normalidad univariada, no así lo inverso -->
+
+
+<!-- Este análisis sólo tiene sentido cuando las medias de ambos grupos difieren significativamente.    -->
+<!-- La ausencia de normalidad multivariante o la presencia de outliers conlleva a pro blemas en la estimación de los parámetros de las distribuciones de ambos grupos.    -->
+<!-- Las matrices de varianzas-covarianzas distintas requieren el uso de técnicas de clasificación cuadráticas. Estas técnicas son conocidas como Análisis Discriminante Cuadrático de Fisher.   -->
+<!-- En la validación cruzada es importante entender que para cada elemento que se elimina, se construye una regla distinta y por lo tanto, los coeficientes de la misma pueden variar de un caso a otro. -->
+<!-- La multicolinealidad genera problemas en la interpretación de los coeficientes de las variables.    -->
+<!-- No todos los conjuntos son linealmente separables (situación que analizaremos con más detalle en lo que sigue). -->
+
+## Datos
+
+```{r, eval=(LDA | AI)}
+input <- ("
+especie pata abdomen organo_sexual 
+a 191 131 53
+a 185 134 50
+a 200 137 52
+a 173 127 50
+a 171 128 49
+a 160 118 47
+a 188 134 54
+a 186 129 51
+a 174 131 52
+a 163 115 47
+b 186 107 49
+b 211 122 49
+b 201 144 47
+b 242 131 54
+b 184 108 43
+b 211 118 51
+b 217 122 49
+b 223 127 51
+b 208 125 50
+b 199 124 46
+")
+datos <- read.table(textConnection(input), header = TRUE)
+#datos = iris
+# datos <- read_delim("avispas.csv",
+#     delim = ";", escape_double = FALSE, trim_ws = TRUE)
+# factorizo variable factor
+#datos <- read_excel("barotro.xlsx")
+
+datos[[{{variable_factor_lda}}]] = as.factor(datos[[{{variable_factor_lda}}]]) 
+# resumente datos
+str(datos)
+```
+
+### Box por variable
+
+<!-- Observamos el boxplot con punto rojo indicando los vectores medios por grupo para apreciar si el análisis discriminante es de utilidad dado que requiere cierto nivel de diferenciación entre ambos para tener efectividad. -->
+
+```{r, eval=(LDA | AI)}
+datos %>% 
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', - variable_factor_lda) %>% 
+  rename(grupo = variable_factor_lda) %>% 
+  ggplot(aes(x=variables, y=cantidad, fill=as.factor(grupo))) + 
+  geom_boxplot() +
+  stat_summary(fun.y=mean, geom="point", shape=18, size=3, color="red") +
+  facet_wrap(~variables, scales = 'free')
+```
+<!-- ## Importancia de la diferencias: Test de Hotelling -->
+
+<!-- <!-- Compara los vectores medios de dos grupos, asumiendo varianzas iguales y un nivel de confianza del 95%. --> -->
+
+<!-- ## Normalidad multivariada test -->
+
+<!-- ```{r} -->
+<!-- data.vars <- datos %>% dplyr::select_if(is.numeric) -->
+<!-- mvnort = mvnormtest::mshapiro.test(t(data.vars)) -->
+<!-- mvnort -->
+<!-- ``` -->
+
+<!-- ```{r, class.output="bg-warning"} -->
+<!-- if(mvnort$p.value<0.05){'H0 debe rechazarse, los datos no tiene distribución normal multivariada'} else{'No hay evidencia significativa para rechazar H0, los datos tienen distribución normal'} -->
+
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- det = det(cov(data.vars))  -->
+<!-- ``` -->
+
+<!-- ```{r, class.output="bg-warning"} -->
+<!-- if(det>=1){'el determinante de la matriz de covarianza es positivo'}else{'no se cumple el requisito de positividad del determinante de la matriz de covarianza'} -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- fit <- Hotelling::hotelling.test(filter(datos,especie == "a")[, 2:3], -->
+<!--                                  filter(datos,especie == "b")[, 2:3]) -->
+<!-- fit -->
+<!-- ``` -->
+
+<!-- ```{r, class.output="bg-warning"} -->
+<!-- if(fit$pval<0.05){'H0 debe rechazarse, las medias de los grupos son significativamente distintas'} else{'No hay evidencia significativa para rechazar H0, no hay diferencia significativa entre los vectores medios de los grupos'} -->
+<!-- ``` -->
+
+<!-- <!-- El estadístico de contraste del test de Hotelling aplicando la función de R, para contrastar paralelismo de los perfiles resultó que no hay evidencia a favor de la hipótesis de paralelismo con un nivel del 5%. --> -->
+
+<!-- <!-- Se utiliza el estadístico de contraste del test de Hotelling para probar la igualdad de medias y se concluye que las diferencias entre los vectores medios de ambos grupos resultaron estadísticamente signiﬁcativas con un nivel del 5% (con un p-valor de 0,00029). --> -->
+
+
+```{r,  eval=(LDA | AI)}
+set.seed(1999)
+training.samples <- datos[[{{variable_factor_lda}}]] %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train <- datos[training.samples, ]
+train[[{{variable_factor_lda}}]] = as.factor(train[[{{variable_factor_lda}}]]) 
+test <- datos[-training.samples, ]
+test[[{{variable_factor_lda}}]] = as.factor(test[[{{variable_factor_lda}}]]) 
+```
+
+<!-- ### Normalizar  datos.  -->
+
+<!-- ```{r, eval=(LDA | AI)} -->
+<!-- #Estimar parámetros de preprocesamiento.Las variables categóricas se ignoran automáticamente. -->
+<!-- preproc.param <- train %>%  -->
+<!--   preProcess(method = c("center", "scale")) -->
+<!-- #Transformar los datos usando los parámetros estimados -->
+<!-- train_transformed <- preproc.param %>% predict(train.data) -->
+<!-- test_transformed <- preproc.param %>% predict(test.data) -->
+<!-- ``` -->
+
+```{r, eval=(LDA | AI)}
+temp <- train %>% select(!{{variable_factor_lda}})
+l <- length(unique(train[[{{variable_factor_lda}}]]))
+
+```
+
+## Explorando discriminación por pares de variable
+
+```{r, eval=(LDA | AI)}
+pairs(x =temp, col =train[[{{variable_factor_lda}}]], oma=c(3,3,3,15))
+par(xpd = TRUE)
+legend("bottomright", fill = unique(train[[{{variable_factor_lda}}]]), legend = c(levels(train[[{{variable_factor_lda}}]])))
+```
+
+<!-- Ver qué par de variables separa bien las `r variable_factor_lda ` -->
+
+## Histograma VariablexGrupo
+
+```{r, eval=(LDA | AI)}
+par(mfcol = c(l, dim(temp)[2]))
+for (k in 1:dim(temp)[2]) {
+  j0 <- names(temp)[k]
+  x0 <- seq(min(temp[, k]), max(temp[, k]), le = 50)
+  for (i in 1:l) {
+    i0 <- levels(train[[{{variable_factor_lda}}]])[i]
+    x <- temp[train[[{{variable_factor_lda}}]] == i0, j0]
+    #x = x[[1]] #univariante
+    hist(x, proba = T, col = grey(0.8), main = paste(variable_factor_lda, i0),
+    xlab = j0)
+    lines(x0, dnorm(x0, mean(x), sd(x)), col = "red", lwd = 2)
+  }
+}
+```
+
+## Contraste de Normalidad Univariante Shapiro-Wilk
+
+<!-- El test no garantiza que dada la normalidad univariada tengamos también normalidad multivariada. -->
+
+```{r, eval=(LDA | AI)}
+train_tidy <- melt(train, value.name = "valor")
+train_tidy_test <- train_tidy %>% 
+  group_by(train_tidy[[{{variable_factor_lda}}]], variable) %>% 
+  summarise(p_value_Shapiro.test = round(shapiro.test(valor)$p.value, digits = 5))
+kableExtra::kable(train_tidy_test)
+```
+
+```{r, eval=(LDA | AI), class.output="bg-warning"}
+if(any(train_tidy_test$p_value_Shapiro.test < 0.05)){'H0 debe rechazarse: hay evidencia de falta de normalidad en los siguientes casos'} else {'No hay evidencia de falta de normalidad univariante en ninguna variable predictora por grupo'}
+train_tidy_test[train_tidy_test$p_value_Shapiro.test < 0.05, ]
+
+```
+
+## Contraste de Normalidad MultiVariante
+
+### Outliers
+
+<!-- select multivariate outlier detection method, "quan" quantile method based on -->
+<!-- Mahalanobis distance (default) and "adj" adjusted quantile method based on -->
+<!-- Mahalanobis distance -->
+
+<!-- 8. Valores atípicos multivariantes (Multivariate outliers) -->
+
+<!-- Los valores atípicos multivariados son la razón común para violar la suposición de MVN. En otras palabras, la suposición de MVN requiere la ausencia de valores atípicos multivariados. Por lo tanto, es crucial verificar si los datos tienen valores atípicos multivariantes, antes de comenzar con el análisis multivariado. La MVN incluye dos métodos de detección de valores atípicos multivariados que se basan en distancias robustas de Mahalanobis (rMD (x)). La distancia de Mahalanobis es una métrica que calcula qué tan lejos está cada observación del centro de distribución de la articulación, que se puede considerar como el centroide en el espacio multivariable. Las distancias robustas se estiman a partir de estimadores determinantes de covarianza mínima en lugar de la covarianza de la muestra [7]. Estos dos enfoques, definidos como la distancia Mahalanobis y la distancia Mahalanobis ajustada en el paquete, detectan valores atípicos multivariados como se indica a continuación, -->
+
+<!-- El argumento multivariateOutlierMethod como “quan” para el método de cuantiles basado en la distancia de Mahalanobis y como “adj” para el método cuantil ajustado basado en la distancia de Mahalanobis para detectar valores atípicos multivariados como se indica a continuación. También devuelve un nuevo conjunto de datos en el que se eliminan los valores atípicos declarados. Además, este argumento crea gráficos Q-Q para la inspección visual de los posibles valores atípicos. -->
+
+
+```{r, eval=(LDA | AI)}
+outliers <- MVN::mvn(data =temp, mvnTest = "hz", multivariateOutlierMethod = "quan")
+```
+
+
+```{r, eval=(LDA | AI)}
+if(!is.null(outliers$multivariateOutliers)){outliers$multivariateOutliers}
+```
+
+<!-- Hay outliers? -->
+
+### Test de Royston
+
+```{r, eval=(LDA | AI)}
+royston_test <- MVN::mvn(data = temp, mvnTest = "royston", multivariatePlot = "qq")
+royston_test$multivariateNormality
+```
+
+```{r, eval=(LDA | AI), class.output="bg-warning"}
+# N tiene que ser > 3 y < a 5000
+if(any(royston_test$multivariateNormality$MVN == "NO")){'H0 debe rechazarse: falta de normalidad multivariante a nivel de significancia 0.05'} else {'No hay evidencia de falta de normalidad multivariante a nivel de significancia 0.05'}
+```
+
+### Test de Henze-Zirkler
+
+```{r, eval=(LDA | AI)}
+hz_test <- MVN::mvn(data = temp, mvnTest = "hz")
+hz_test$multivariateNormality
+```
+
+```{r, eval=(LDA | AI), class.output="bg-warning"}
+if(any(hz_test$multivariateNormality$MVN == "NO")){'H0 debe rechazarse: falta de normalidad multivariante a nivel de significancia 0.05'} else {'No hay evidencia de falta de normalidad multivariante a nivel de significancia 0.05 '}
+```
+
+## Contraste Homosedasticidad 
+### Test sobre Matriz de Covarianza
+
+<!-- Este test es sensible a la falta de normalidad. Es decir matrices iguales pueden resultar significativamente distintas por el  hecho de no cumplirse el supuesto de normalidad. -->
+
+```{r, eval=(LDA | AI)}
+library(biotools)
+boxmtest =  boxM(data = temp, grouping = train[[{{variable_factor_lda}}]])
+boxmtest
+```
+
+```{r, eval=(LDA | AI), class.output="bg-warning"}
+if(boxmtest$p.value < 0.05){'H0 debe rechazarse: hay evidencia de que la covarianza no es igual en todos los grupos'} else {'No se rechaza H0:la matriz de covarianza es igual en los grupos, hay homocedasticidad'}
+```
+
+### Test de Levene
+
+<!-- Mas robusto que el test M de Box -->
+
+```{r, eval=(LDA | AI)}
+levenetest = heplots::leveneTests(temp, train[[{{variable_factor_lda}}]], center = median)
+levenetest
+```
+
+```{r, eval=(LDA | AI)}
+if(any(levenetest$`Pr(>F)`<0.05)){'H0 debe rechazarse: no se cumple supuesto de homosedasticidad.Intentar QDA'} else {'No hay evidencia para rechazar H0, luego los datos son homosedásticos'}
+```
+
+## Estimación de parámetros de la función de densidad y cálculo de la función discriminante según aproximación de Fisher via lda()
+
+```{r, eval = LDA}
+modelo_lda <- lda(temp, train[[{{variable_factor_lda}}]])
+```
+
+```{r, eval= LDA}
+modelo_lda
+```
+
+<!-- ## Funcion discriminante -->
+
+<!-- ```{r, eval= LDA} -->
+<!-- modelo_lda$means[1,1] -->
+<!-- modelo_lda$scaling -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- # Expresion de la funcion discriminante:  -->
+<!-- modelo_lda$scaling[1]*modelo_lda$means[1,1]+modelo_lda$scaling[2]*modelo_lda$means[1,2] -->
+<!-- modelo_lda$scaling[1]*modelo_lda$means[2,1]+modelo_lda$scaling[2]*modelo_lda$means[2,2] -->
+<!-- ``` -->
+
+`r if (LDA & !is.na(valores_lda_nvaobs)) '## Clasificacion de la nueva observacion'`
+
+```{r, eval= LDA & !is.na(valores_lda_nvaobs)}
+columnas = colnames(temp)
+nueva_observacion <- rbind(columnas, valores_lda_nvaobs)
+nueva_observacion <- nueva_observacion %>% 
+  janitor::row_to_names(row_number = 1)
+nueva_observacion <- nueva_observacion %>% as_tibble() %>% mutate_if(is.character, as.numeric)
+predict(object = modelo_lda, newdata = nueva_observacion)
+```
+
+<!-- El resultado muestra, según la función discriminante, la probabilidad posterior por grupo -->
+
+## Evaluación del error en Test Set: Accuracy Table
+
+```{r, eval=(LDA | AI)}
+temp_test <- test %>% select(!{{variable_factor_lda}})
+predicciones <- predict(object = modelo_lda, newdata = temp_test, method = "predictive")
+table(test[[{{variable_factor_lda}}]], predicciones$class, dnn = c("Clase real", "Clase predicha"))
+```
+
+## Precisión del modelo en test set
+
+```{r, eval=(LDA | AI)}
+mean(predicciones$class==test[[{{variable_factor_lda}}]])*100
+```
+
+## Error en test set
+
+```{r, eval=(LDA | AI)}
+test_error <- mean(test[[{{variable_factor_lda}}]] != predicciones$class) * 100
+paste("test_error =", test_error, "%")
+```
+
+## Validación Cruzada (leave one out)
+
+```{r, eval=(LDA | AI)}
+tipo.prediccion.cv <- lda(temp, train[[{{variable_factor_lda}}]], prior = c(0.5,0.5), CV =TRUE)$class
+1 - sum(tipo.prediccion.cv == train[[{{variable_factor_lda}}]])/modelo_lda$N
+```
+<!-- Mide el error de clasificación sobre aciertos, cuando más bajo mejor. -->
+
+## Visualización de las clasificaciones
+
+```{r, eval=(LDA | AI)}
+partimat(temp_test, test[[{{variable_factor_lda}}]], method = "lda", prec = 200)
+```
+
+\pagebreak
+
+# Analisis Discriminante Cuadrático (QDA)\>falta de homocedasticidad/outliers LDA
+
+<!-- El clasificador cuadrático o Quadratic Discriminat Analysis QDA se asemeja en gran medida al LDA, con la única diferencia de que el QDA considera que cada clase k tiene su propia matriz de covarianza (∑k) y, como consecuencia, la función discriminante toma forma cuadrática.    -->
+
+<!-- QDA genera límites de decisión curvos por lo que puede aplicarse a situaciones en las que la separación entre grupos no es lineal.    -->
+
+<!-- Just like ANOVA requires an assumption of equal variances, LDA requires an assumption of equal variance-covariance matrices (between the input variables) of the classes. This assumption is important for classification stage of the analysis. If the matrices substantially differ, observations will tend to be assigned to the class where variability is greater. To overcome the problem, QDA was invented. QDA is a modification of LDA which allows for the above heterogeneity of classes' covariance matrices. -->
+
+<!-- When the covariance matrices are indeed the same in the data, LDA and QDA lead to the same decision boundaries. Butwhen the covariance matrices are different, LDA leads to bad performance as its assumption becomes invalid, while QDA performs classification much better. -->
+
+
+```{r, eval=(QDA | AI)}
+library(mclust)
+datosQ = as_tibble(mclust::banknote)
+#se recodifican las clases de la variable Status: verdadero = 0, falso = 1
+
+# factorizo variable factor
+datosQ[[{{variable_factor_qda}}]] = as.factor(datosQ[[{{variable_factor_qda}}]])
+# resumente datos
+str(datosQ)
+```
+
+
+```{r,  eval=(QDA | AI)}
+set.seed(1999)
+training.samples <- datosQ[[{{variable_factor_qda}}]] %>%
+  createDataPartition(p = 0.8, list = FALSE)
+train <- datosQ[training.samples, ]
+test <- datosQ[-training.samples, ]
+```
+
+<!-- ### Normalizar  datos.  -->
+
+<!-- ```{r, eval=(LDA | AI)} -->
+<!-- #Estimar parámetros de preprocesamiento.Las variables categóricas se ignoran automáticamente. -->
+<!-- preproc.param <- train %>%  -->
+<!--   preProcess(method = c("center", "scale")) -->
+<!-- #Transformar los datos usando los parámetros estimados -->
+<!-- train_transformed <- preproc.param %>% predict(train.data) -->
+<!-- test_transformed <- preproc.param %>% predict(test.data) -->
+<!-- ``` -->
+
+```{r, eval=(QDA | AI)}
+temp <- train %>% select(!{{variable_factor_qda}})
+l <- length(unique(train[[{{variable_factor_qda}}]]))
+
+```
+
+## Explorando discriminación por pares de variable
+
+```{r, eval=(QDA | AI)}
+pairs(x =temp, col =train[[{{variable_factor_qda}}]], oma=c(3,3,3,15))
+par(xpd = TRUE)
+legend("bottomright", fill = unique(train[[{{variable_factor_qda}}]]), legend = c(levels(train[[{{variable_factor_qda}}]])))
+```
+
+## Contraste de Normalidad Univariante Shapiro-Wilk
+
+```{r, eval=(QDA | AI)}
+train_tidy <- melt(train, value.name = "valor")
+train_tidy_test <- train_tidy %>% group_by(train_tidy[[{{variable_factor_qda}}]], variable) %>% summarise(p_value_Shapiro.test = round(shapiro.test(valor)$p.value, digits = 5))
+kableExtra::kable(train_tidy_test)
+```
+
+```{r, eval=(QDA | AI), class.output="bg-warning"}
+if(any(train_tidy_test$p_value_Shapiro.test < 0.05)){'H0 debe rechazarse: hay evidencia de falta de normalidad en los siguientes casos'} else {'No hay evidencia de falta de normalidad univariante en ninguna variable predictora por grupo'}
+train_tidy_test[train_tidy_test$p_value_Shapiro.test < 0.05, ]
+
+```
+
+## Contraste de Normalidad MultiVariante
+
+### Outliers
+
+```{r, eval=(QDA | AI)}
+outliers <- MVN::mvn(data = temp, mvnTest = "hz", multivariateOutlierMethod = "adj")
+```
+
+```{r, eval=(QDA | AI)}
+if(!is.null(outliers$multivariateOutliers)){outliers$multivariateOutliers}
+```
+
+
+### Test de Royston
+
+```{r, eval=(QDA | AI)}
+royston_test <- MVN::mvn(data = temp, mvnTest = "royston", multivariatePlot = "qq")
+royston_test$multivariateNormality
+```
+
+```{r, eval=(QDA | AI), class.output="bg-warning"}
+# N tiene que ser > 3 y < a 5000
+if(any(royston_test$multivariateNormality$MVN == "NO")){'H0 debe rechazarse: falta de normalidad multivariante a nivel de significancia 0.05'} else {'No hay evidencia de falta de normalidad multivariante a nivel de significancia 0.05'}
+```
+
+### Test de Henze-Zirkler
+
+```{r, eval=(QDA | AI)}
+hz_test <- MVN::mvn(data = temp, mvnTest = "hz")
+hz_test$multivariateNormality
+```
+
+```{r, eval=(QDA | AI), class.output="bg-warning"}
+if(any(hz_test$multivariateNormality$MVN == "NO")){'H0 debe rechazarse: falta de normalidad multivariante a nivel de significancia 0.05'} else {'No hay evidencia de falta de normalidad multivariante a nivel de significancia 0.05 '}
+```
+
+## Contraste de Matriz de Covarianza
+
+```{r, eval=(QDA | AI)}
+library(biotools)
+boxmtest =  biotools::boxM(data = temp, grouping = train[[{{variable_factor_qda}}]])
+boxmtest
+```
+
+```{r, eval=(QDA | AI), class.output="bg-warning"}
+if(boxmtest$p.value < 0.05){'H0 debe rechazarse: hay evidencia de que la covarianza no es igual en todos los grupos'} else {'Se puede aceptar que la matriz de covarianza es igual en todos los grupos'}
+```
+
+## Parámetros de la función de densidad función discriminante según aproximación de Fisher via qda()
+
+```{r, eval=(QDA | AI)}
+modelo_qda <- qda(temp, train[[{{variable_factor_qda}}]])
+```
+
+```{r, eval=(QDA | AI)}
+modelo_qda
+```
+
+`r if (QDA & !is.na(valores_qda_nvaobs)) '## Clasificacion de la nueva observacion'`
+
+```{r, eval=((QDA | AI) & !is.na(valores_qda_nvaobs))}
+columnas = colnames(temp)
+nueva_observacion <- rbind(columnas, valores_qda_nvaobs)
+nueva_observacion <- nueva_observacion %>% 
+  janitor::row_to_names(row_number = 1)
+nueva_observacion <- nueva_observacion %>% as_tibble() %>% mutate_if(is.character, as.numeric)
+predict(object = modelo_qda, newdata = nueva_observacion)
+```
+
+<!-- El resultado muestra, según la función discriminante, la probabilidad posterior por grupo -->
+
+## Evaluación del error en test set: Accuracy Table
+
+```{r, eval=(QDA | AI)}
+temp_test <- test %>% select(!{{variable_factor_qda}})
+predicciones <- predict(object = modelo_qda, newdata = temp_test, method = "predictive")
+table(test[[{{variable_factor_qda}}]], predicciones$class,
+      dnn = c("Clase real", "Clase predicha"))
+```
+
+```{r, eval=(QDA | AI)}
+test_error <- mean(test[[{{variable_factor_qda}}]] != predicciones$class) * 100
+paste("test_error =", test_error, "%")
+```
+
+## Visualización de las clasificaciones
+
+```{r, eval=(QDA | AI)}
+partimat(temp_test, test[[{{variable_factor_qda}}]], method = "qda", prec = 200)
+```
+
+\pagebreak
+
+# Analisis Discriminante Cuadrático Robusto (RQDA)
+
+<!-- -emplea distancia de Mahalanobis robusta -->
+
+<!-- Se aplica ante la presencia de outliers -->
+
+<!-- -se obtiene con MCD: Minimum Covariance Determinant -->
+
+<!-- Utilizar librería: https://github.com/valentint/rrcov  o libro alicia p.321 -->
+
+<!-- CODIGO OUTLIERS MULTIVARIADOS -->
+
+<!-- #https://rpubs.com/karenroberts16/clasificacion_supervisada -->
+```{r}
+
+```
+
+
+\pagebreak
+
+# Máquinas de Soporte Vectorial
+
+<!-- El algoritmo de las SVM a partir del producto escalar de dos vectores multidimensionales, busca una familia de hiperplanos que sepa ren los grupos. La función que define este producto escalar es denominada kernel y la misma puede ser lineal, polinómica, radial o sigmoidal. -->
+
+<!-- Muy importante estandarizar datos -->
+
+<!-- La mayor debilidad radica en que es necesaria una buena función kernel; es decir, se necesitan metodologías eficientes para definir los parámetros de inicialización de las SVM. -->
+
+
+## Datos
+
+```{r, eval=(SVM | AI)}
+# Bibliograf
+
+# https://www.cienciadedatos.net/documentos/34_maquinas_de_vector_soporte_support_vector_machines
+
+#Cambiar
+#datos <- ISLR::OJ
+datos <- iris
+
+datos[[{{variable_factor_svm}}]] = as.factor(datos[[{{variable_factor_svm}}]])
+
+# Convierto variables predictoras tipo factor a numeric
+dat_f = datos %>% select(variable_factor_svm)
+
+
+dat_all =  datos %>%
+  select(-variable_factor_svm) %>%
+  mutate_if(is.factor, as.numeric) 
+
+# Matriz escalada--------------------------------------------------
+# dat_all <- dat_all %>% 
+#   select_if(is.numeric) %>% 
+#   scale(center = T, scale = T)
+
+
+datos = dat_f %>% bind_cols(dat_all)
+
+# x=c(rnorm (50,5,2),rnorm(50,8,1.5),rnorm(50,1,1.2))
+# y=c(abs(rnorm(50,5,2)),rnorm(50,8,1.5),rnorm(50,1,1.2))
+# Grupo=as.factor(c(rep("A",50),rep("B",50),rep("C",50)))
+# datos =data.frame(x,y,Grupo)
+
+# # Programar la elección de otros kernel???!!!!
+# kernel = "radial" 
+
+# resumente datos
+str(datos)
+```
+
+## Grafico datos
+
+```{r, eval=(SVM | AI)}
+datos %>% 
+  ggplot( aes(x = variable_factor_svm, y = ..count.., fill = datos[[{{variable_factor_svm}}]])) +
+  geom_bar() 
+```
+
+```{r, eval=(SVM | AI)}
+# Índices observaciones de entrenamiento
+set.seed(123)
+train <- createDataPartition(y = datos[[{{variable_factor_svm}}]], p = 0.8, list = FALSE, times = 1)
+# Datos entrenamiento
+datos_train <- datos[train, ]
+datos_test <- datos[-train, ]
+dim(datos_train)
+dim(datos_test)
+
+```
+
+## Busqueda de mejor hiperparametro C (coste) y Entrenamiento del Modelo con kernel lineal
+
+<!-- A la hora de ajustar un support vector classifier, es importante tener en cuenta que el hiperparámetro C (cost) controla el equilibrio bias-varianza y la capacidad predictiva del modelo, ya que determina la severidad permitida respecto a las violaciones sobre el margen. En otras palabras, necesitamos fijar un margen de separación entre observaciones a priori. Por ello es recomendable evaluar distintos valores del mismo mediante validación cruzada y escoger el valor óptimo. -->
+
+<!-- Obtendremos un valor de coste óptimo mediante validación cruzada utilizando la función tune() del paquete e1071 -->
+
+
+```{r, eval=(SVM | AI)}
+temp = datos_train %>% select(-variable_factor_svm)
+set.seed(325)
+tuning <- tune(svm, train.x = temp,  train.y = datos_train[[{{variable_factor_svm}}]],
+               kernel = "linear",
+               ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 15, 20)),
+               scale = TRUE) # parametro para escalar los predictores
+```
+
+```{r, eval=(SVM | AI)}
+summary(tuning)
+```
+
+### Mejor modelo según hiperparametro
+
+```{r, eval=(SVM | AI)}
+modelo_svc <- tuning$best.model
+summary(modelo_svc)
+```
+
+```{r, eval=(SVM | AI)}
+# Muestra de 50 de los 345
+head(modelo_svc$index)
+```
+
+## Predicciones del Modelo
+
+```{r, eval=(SVM | AI)}
+temp = datos_test %>% select(-variable_factor_svm)
+predicciones = predict(modelo_svc, temp)
+table(prediccion = predicciones, real = datos_test[[{{variable_factor_svm}}]])
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test mal clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] != predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test bien clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] == predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+## Busqueda de mejor hiperparametro C (coste) y Entrenamiento del Modelo con kernel polynomial
+
+```{r, eval=(SVM | AI)}
+temp = datos_train %>% select(-variable_factor_svm)
+set.seed(325)
+tuning <- tune(svm, train.x = temp,  train.y = datos_train[[{{variable_factor_svm}}]],
+               kernel = "polynomial",
+               ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 15, 20)),
+               scale = TRUE)
+```
+
+```{r, eval=(SVM | AI)}
+summary(tuning)
+```
+
+### Mejor modelo según hiperparametro
+
+```{r, eval=(SVM | AI)}
+modelo_svc <- tuning$best.model
+summary(modelo_svc)
+```
+
+## Predicciones del Modelo
+
+```{r, eval=(SVM | AI)}
+temp = datos_test %>% select(-variable_factor_svm)
+predicciones = predict(modelo_svc, temp)
+table(prediccion = predicciones, real = datos_test[[{{variable_factor_svm}}]])
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test mal clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] != predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test bien clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] == predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+## Busqueda de mejor hiperparametro C (coste) y Entrenamiento del Modelo con kernel sigmoid
+
+```{r, eval=(SVM | AI)}
+temp = datos_train %>% select(-variable_factor_svm)
+set.seed(325)
+tuning <- tune(svm, train.x = temp,  train.y = datos_train[[{{variable_factor_svm}}]],
+               kernel = "sigmoid",
+               ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 15, 20)),
+               scale = TRUE)
+```
+
+### Mejor modelo según hiperparametro
+
+```{r, eval=(SVM | AI)}
+modelo_svc <- tuning$best.model
+summary(modelo_svc)
+```
+
+## Predicciones del Modelo
+
+```{r, eval=(SVM | AI)}
+temp = datos_test %>% select(-variable_factor_svm)
+predicciones = predict(modelo_svc, temp)
+table(prediccion = predicciones, real = datos_test[[{{variable_factor_svm}}]])
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test mal clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] != predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test bien clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] == predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+## Busqueda de mejor hiperparametro C (coste) y Entrenamiento del Modelo con kernel radial 
+
+```{r, eval=(SVM | AI)}
+temp = datos_train %>% select(-variable_factor_svm)
+set.seed(325)
+tuning <- tune(svm, train.x = temp,  train.y = datos_train[[{{variable_factor_svm}}]],
+               kernel = "radial",
+               ranges = list(cost = c(0.001, 0.01, 0.1, 1, 5, 10, 15, 20)),
+               scale = TRUE)
+```
+
+### Mejor modelo según hiperparametro
+
+```{r, eval=(SVM | AI)}
+modelo_svc <- tuning$best.model
+summary(modelo_svc)
+```
+
+## Predicciones del Modelo
+
+```{r, eval=(SVM | AI)}
+temp = datos_test %>% select(-variable_factor_svm)
+predicciones = predict(modelo_svc, temp)
+table(prediccion = predicciones, real = datos_test[[{{variable_factor_svm}}]])
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test mal clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] != predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+```{r, eval=(SVM | AI)}
+paste("Observaciones de test bien clasificadas:", 
+      100 * mean(datos_test[[{{variable_factor_svm}}]] == predicciones) %>% 
+        round(digits = 4), "%")
+```
+
+\pagebreak
+
+# Regresión logística (LR)
+## Datos
+
+```{r, eval=(Regresion_Logistica | AI)}
+datos <- data.frame(sexo = c("hombre", "hombre", "mujer", "mujer", "mujer", "hombre",
+                             "mujer", "hombre", "mujer", "mujer", "hombre", "hombre",
+                             "hombre", "hombre", "mujer", "mujer", "hombre", "mujer",
+                             "hombre", "mujer", "hombre", "mujer", "mujer", "hombre",
+                             "hombre", "mujer", "mujer", "mujer", "hombre", "hombre",
+                             "hombre", "mujer", "hombre", "mujer", "hombre", "mujer",
+                             "mujer", "mujer", "mujer", "mujer", "hombre", "mujer",
+                             "hombre", "mujer", "mujer", "mujer", "mujer", "hombre",
+                             "mujer", "hombre", "mujer", "hombre", "mujer", "mujer",
+                             "hombre", "hombre", "hombre", "hombre", "hombre", "hombre",
+                             "hombre", "hombre", "hombre", "mujer", "hombre", "hombre",
+                             "hombre", "hombre", "mujer", "hombre", "mujer", "hombre",
+                             "hombre", "hombre", "mujer", "hombre", "mujer", "mujer",
+                             "hombre", "mujer", "mujer", "mujer", "hombre", "hombre",
+                             "hombre", "hombre", "hombre", "mujer", "mujer", "mujer",
+                             "mujer", "hombre", "mujer", "mujer", "mujer", "mujer",
+                             "mujer", "mujer", "mujer", "mujer","mujer", "mujer",
+                             "hombre", "mujer", "hombre", "hombre", "mujer", "mujer",
+                             "mujer", "hombre","mujer", "hombre", "mujer", "mujer",
+                             "mujer", "hombre", "mujer", "hombre", "mujer", "hombre",
+                             "mujer", "hombre", "mujer", "mujer", "mujer", "mujer",
+                             "mujer", "mujer", "mujer", "mujer", "hombre", "mujer",
+                             "hombre", "hombre", "hombre", "hombre", "hombre", "hombre",
+                             "hombre", "mujer","mujer", "mujer", "hombre", "hombre",
+                             "mujer", "mujer", "hombre", "mujer", "hombre", "hombre",
+                             "hombre", "mujer", "mujer", "mujer", "mujer", "hombre",
+                             "hombre", "mujer", "hombre", "hombre", "mujer", "hombre",
+                             "hombre", "hombre", "hombre", "mujer", "hombre", "hombre",
+                             "mujer", "mujer", "hombre", "hombre", "hombre", "hombre",
+                             "hombre", "mujer", "mujer", "mujer", "mujer", "hombre",
+                             "hombre", "hombre", "mujer", "hombre", "mujer", "hombre",
+                             "hombre", "hombre", "mujer"),
+                    examen_lectura = c(91, 77.5, 52.5, 54, 53.5, 62, 59, 51.5,
+                                       61.5, 56.5, 47.5, 75, 47.5, 53.5, 50, 50,
+                                       49, 59, 60, 60, 60.5, 50, 101, 60, 60,
+                                       83.5, 61, 75, 84, 56.5, 56.5, 45, 60.5,
+                                       77.5, 62.5, 70, 69, 62, 107.5, 54.5, 92.5,
+                                       94.5, 65, 80, 45, 45, 66, 66, 57.5, 42.5,
+                                       60, 64, 65, 47.5, 57.5, 55, 55, 76.5,
+                                       51.5, 59.5, 59.5, 59.5, 55, 70, 66.5,
+                                       84.5, 57.5, 125, 70.5, 79, 56, 75, 57.5,
+                                       56, 67.5, 114.5, 70, 67, 60.5, 95, 65.5,
+                                       85, 55, 63.5, 61.5, 60, 52.5, 65, 87.5,
+                                       62.5, 66.5, 67, 117.5, 47.5, 67.5, 67.5,
+                                       77, 73.5, 73.5, 68.5, 55, 92, 55, 55, 60,
+                                       120.5, 56, 84.5, 60, 85, 93, 60, 65, 58.5,
+                                       85, 67, 67.5, 65, 60, 47.5, 79, 80, 57.5,
+                                       64.5, 65, 60, 85, 60, 58, 61.5, 60, 65,
+                                       93.5, 52.5, 42.5, 75, 48.5, 64, 66, 82.5,
+                                       52.5, 45.5, 57.5, 65, 46, 75, 100, 77.5,
+                                       51.5, 62.5, 44.5, 51, 56, 58.5, 69, 65,
+                                       60, 65, 65, 40, 55, 52.5, 54.5, 74, 55,
+                                       60.5, 50, 48, 51, 55, 93.5, 61, 52.5,
+                                       57.5, 60, 71, 65, 60, 55, 60, 77, 52.5,
+                                       95, 50, 47.5, 50, 47, 71, 65),
+                    clases_repaso = c("0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "0", "0", "0", "0", "0", "0",
+                                      "0", "0", "1", "1", "1", "1", "1", "1",
+                                      "1", "1", "1", "1", "1", "1", "1", "1",
+                                      "1", "1", "1", "1", "1", "1", "1", "1",
+                                      "1", "1", "1", "1", "1", "1", "1", "1",
+                                      "1", "1", "1", "1", "1", "1", "1", "1",
+                                      "1", "1", "1", "1", "1", "1", "1", "1",
+                                      "1", "1", "1", "1", "1", "1", "1", "1",
+                                      "1", "1", "1", "1", "1"))
+
+#daframe
+datos = readxl::read_xlsx("prostata.xlsx") 
+variable_factor_lr = 'Rotura'
+# factorizo variable factor
+datos[[{{variable_factor_lr}}]] = as.factor(datos[[{{variable_factor_lr}}]]) 
+# resumente datos
+str(datos)
+```
+### Boxplot todas las variables
+
+```{r, eval=(Regresion_Logistica | AI)}
+boxplot(datos)
+```
+
+### Box por grupo
+
+```{r, eval=(Regresion_Logistica | AI)}
+datos %>% 
+  ggplot(aes(x = datos[[{{variable_factor_lr}}]], y = PSA)) + # mas variables agregar color o facet
+  geom_boxplot() +
+  theme_bw() 
+```
+
+### Box por variable
+
+```{r, eval=(Regresion_Logistica | AI)}
+datos %>% 
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', - variable_factor_lr) %>% 
+  rename(grupo = variable_factor_lr) %>% 
+  ggplot(aes(x=variables, y=cantidad, fill=grupo)) + 
+  geom_boxplot() +
+  facet_wrap(~variables, scales = 'free')
+```
+
+```{r, eval=(Regresion_Logistica | AI)}
+modelo_glm <- glm(Rotura ~ PSA + Gleason, data = datos, family = "binomial")
+summary(modelo_glm)
+```
+### P valores
+
+```{r, eval=(Regresion_Logistica | AI)}
+coef(summary(modelo_glm))[,4]
+```
+
+```{r, eval=(Regresion_Logistica | AI)}
+predicciones <- ifelse(test = modelo_glm$fitted.values > 0.5, yes = 1, no = 0)
+matriz_confusion <- table(modelo_glm$model[[variable_factor_lr]], predicciones,
+                          dnn = c("observaciones", "predicciones"))
+matriz_confusion
+```
+
+```{r, eval=(Regresion_Logistica | AI)}
+mosaic(matriz_confusion, shade = T, colorize = T,
+       gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
+```
+
+<!-- Acorde al modelo, el logaritmo de odds de que un estudiante necesite clases de repaso esta negativamente relacionado con la puntuación obtenida en el examen de lectura (coeficiente parcial = -0.02617), siento significativa esta relación (p-value = 0.0324). También existe una relación significativa positiva entre el logaritmo de odds de necesitar clases de repaso y el género del estudiante (p-value = 0.0462), siendo, para un mismo resultado en el examen de lectura, mayor si el estudiante es hombre. En concreto los odds de que un hombre requiera clases de repaso son e0.64749=1.910739 mayores que los de las mujeres. (Esto se puede ver gráficamente representando el modelo para hombres y mujeres). -->
+
+\pagebreak
+# Clustering
+
+<!-- El término clustering hace referencia a un amplio abanico de técnicas no supervisadas cuya finalidad es encontrar patrones o grupos (clusters) dentro de un conjunto de observaciones. Las particiones se establecen de forma que, las observaciones que están dentro de un mismo grupo, son similares entre ellas y distintas a las observaciones de otros grupos. Se trata de un método no supervisado, ya que el proceso ignora la variable respuesta que indica a que grupo pertenece realmente cada observación (si es que existe tal variable). Esta característica diferencia al clustering de las técnicas supervisadas, que emplean un set de entrenamiento en el que se conoce la verdadera clasificación. -->
+
+<!-- Cluster:     -->
+
+<!-- - No Jerárquicos       -->
+
+<!-- - Jerárquicos    -->
+
+<!--   * Aglomerativos o ascendentes    -->
+
+<!--   * Divisivos o descendentes    -->
+
+<!-- ## Distancias -->
+
+<!-- Medidas de distancia -->
+
+<!-- Todos los métodos de clustering tienen una cosa en común, para poder llevar a cabo las agrupaciones necesitan definir y cuantificar la similitud entre las observaciones. El término distancia se emplea dentro del contexto del clustering como cuantificación de la similitud o diferencia entre observaciones. Si se representan las observaciones en un espacio p dimensional, siendo p el número de variables asociadas a cada observación, cuando más se asemejen dos observaciones más próximas estarán, de ahí que se emplee el término distancia. La característica que hace del clustering un método adaptable a escenarios muy diversos es que puede emplear cualquier tipo de distancia, lo que permite al investigador escoger la más adecuada para el estudio en cuestión. A continuación, se describen algunas de las más utilizadas. -->
+
+<!-- Cuando se dispone de numerosas variables para realizar el agrupamiento, es común utilizar, previo a la clusterización, técnicas de reducción de dimensión tales como el análisis de componentes principales, para obtener un número menor de variables capaces de expresar la variabilidad en los datos. -->
+
+
+<!-- ## Bibliograf -->
+
+<!-- https://www.cienciadedatos.net/documentos/37_clustering_y_heatmaps -->
+
+<!-- ## Atención -->
+
+<!-- Escalar de las variables: la escala en la que se miden las variables y la magnitud de su varianza pueden afectar en gran medida a los resultados obtenidos por clustering. -->
+
+<!-- Cluster de variables -->
+<!-- https://rpubs.com/pjmurphy/269609 -->
+
+
+## Datos
+
+```{r, eval=(Clustering | AI)}
+# Definir dataset
+datos = USArrests
+#datos <- readxl::read_excel("museos.xls") 
+datos <- readxl::read_excel("futbol.xlsx") 
+```
+
+### Se centran los datos de la matriz con omisión de datos faltantes
+
+<!-- En el caso en que las variables estén registradas en diferentes escalas y/o unidades -->
+<!-- de medición, se suele tipificar a las mismas de tal manera de lograr que todas -->
+<!-- las variables tengan media nula y desviación típica unitaria, con el fin de evitar la -->
+<!-- influencia de las unidades de medición en la clusterización. -->
+
+
+```{r, eval=(Clustering | AI)}
+# omite faltantes
+datos = na.omit(datos)
+
+datos <- scale(datos %>% select_if(is.numeric), # Se escalan las variables, (x-median)/sd.
+               center = TRUE, scale = TRUE)
+
+# dat_all <- dat_all %>% 
+#   select_if(is.numeric) %>% 
+#   scale(center = T, scale = T)
+
+
+
+```
+
+### Se calculas distancias euclideas
+
+```{r, eval=(Clustering | AI)}
+# Distancia euclídea
+mat_dist <- dist(x = datos, method = "euclidean")
+round(as.matrix(mat_dist)[1:5, 1:5], 2)
+```
+
+```{r, eval=(Clustering | AI)}
+# mat_dist <- get_dist(x = datos, method = "pearson")
+# round(as.matrix(mat_dist)[1:5, 1:5], 2)
+```
+
+## Heatmap de la matriz de distancias entre observaciones del dataset
+
+```{r, eval=(Clustering | AI)}
+fviz_dist(dist.obj = mat_dist, lab_size = 5) +
+  theme(legend.position = "none")
+```
+
+<!-- El color rojo representa alta similaridad y el color azul baja similaridad -->
+
+## Cluster No Jerarquico: K-means (x centroides)
+
+### Seleccion de k en base al método elbow.
+
+<!-- Una forma sencilla de estimar el número K óptimo de clusters cuando no se dispone de información adicional en la que basarse, es aplicar el algoritmo de K-means para un rango de valores de K e identificar aquel valor a partir del cual la reducción en la suma total de varianza intra-cluster deja de ser sustancial. A esta estrategia se la conoce como método del codo o elbow method (en los siguientes apartados se detallan otras opciones). -->
+
+```{r, eval=(Clustering | AI)}
+fviz_nbclust(x = datos, FUNcluster = kmeans, method = "wss", k.max = 15, 
+             diss = get_dist(datos, method = "euclidean"), nstart = 50)
+```
+
+<!-- A través del método elbow identificamos aquel valor a partir del cual la reducción en la suma total de varianza intra-cluster deja de ser sustancial. -->
+
+### Resultado
+
+```{r, eval=(Clustering | AI)}
+# Según punto elbow chunk anterior elegimos los kluster a representar con param 'centers'
+klusters = 4
+set.seed(123)
+km_clusters <- kmeans(x = datos, centers = klusters, nstart = 50) 
+km_clusters
+```
+
+```{r, eval=(Clustering | AI)}
+# Las funciones del paquete factoextra emplean el nombre de las filas del
+# dataframe que contiene los datos como identificador de las observaciones.
+# Esto permite añadir labels a los gráficos.
+fviz_cluster(object = km_clusters, data = datos, show.clust.cent = TRUE, outlier.color = 'black',
+             ellipse.type = "euclid", star.plot = TRUE, repel = TRUE) +
+  labs(title = str_c("K-means con k = ",length(km_clusters$size)))
+```
+
+<!-- Se evidencia conflicto entre los clusters? Ver áreas solapadas  -->
+
+### Grafico Cluster con PCA 
+
+<!-- Permite reducir la dimensionalidad del problema y poder analizar visualmente el agrupamiento que presenta el set de datos. -->
+
+```{r, eval=(Clustering | AI)}
+# PCA
+#pca <- prcomp(iris[,-5], scale=TRUE)
+pca <- prcomp(datos)
+
+df.pca <- pca$x
+# Cluster over the three first PCA dimensions
+kc <- kmeans(df.pca[,1:3], klusters)
+fviz_pca_biplot(pca, label="var", habillage=as.factor(kc$cluster)) +
+  labs(color=NULL) + ggtitle("") +
+  theme(text = element_text(size = 15),
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.key = element_rect(fill = "white"))
+```
+<!-- Cuales son las variables màs representativas por dimensiòn? Las màs paralelas a los ejes son las más represntativas. -->
+
+<!-- Para los vectores (variables), nos fijamos en su longitud y en el ángulo con respecto a los ejes de las componentes principales y entre ellos mismos: -->
+
+<!-- Ángulo: cuanto más paralelo es un vector al eje de una componente, más ha contribuido a la creación de la misma. Con ello obtienes información sobre qué variable(s) ha sido más determinante para crear cada componente, y si entre las variables (y cuales) hay correlaciones. Ángulos pequeños entre vectores representa alta correlación entre las variables implicadas (observaciones con valores altos en una de esas variables tendrá valores altos en la variable o variables correlacionadas); ángulos rectos representan falta de correlación, y ángulos opuestos representan correlación negativa (una observación con valores altos en una de las variables irá acompañado de valores bajos en la otra). -->
+
+<!-- Longitud: cuanto mayor la longitud de un vector relacionado con x variable (en un rango normalizado de 0 a 1), mayor variabilidad de dicha variable está contenida en la representación de las dos componentes del biplot, es decir, mejor está representada su información en el gráfico. -->
+
+<!-- Para los scores (observaciones), nos fijamos en los posibles agrupamientos. Puntuaciones próximas representan observaciones de similares características. Puntuaciones con valores de las variables próximas a la media se sitúan más cerca del centro del biplot (0, 0). El resto representan variabilidades normales o extremas (outliers). Por otro lado, la relación de las observaciones con las variables se puede estudiar proyectando las observaciones sobre la dirección de los vectores. -->
+
+
+
+## Cluster No Jerarquico: K-medoids clustering (con centro en observación más representativa)
+
+<!-- K-medoids es un método de clustering muy similar a K-means en cuanto a que ambos agrupan las observaciones en K clusters, donde K es un valor preestablecido por el analista. La diferencia es que, en K-medoids, cada cluster está representado por una observación presente en el cluster (medoid), mientras que en K-means cada cluster está representado por su centroide, que se corresponde con el promedio de todas las observaciones del cluster pero con ninguna en particular. -->
+
+<!-- Medoid es: elemento dentro de un cluster cuya distancia (diferencia) promedio entre él y todos los demás elementos del mismo cluster es lo menor posible. Se corresponde con el elemento más central del cluster y por lo tanto puede considerarse como el más representativo. El hecho de utilizar medoids en lugar de centroides hace de K-medoids un método más robusto que K-means, viéndose menos afectado por outliers o ruido. -->
+
+### Selección de k con distancia de Manhattan como medida de similitud
+
+```{r, eval=(Clustering | AI)}
+# Manhatan robusta ante outliers
+fviz_nbclust(x = datos, FUNcluster = pam, method = "wss", k.max = 15,
+             diss = dist(datos, method = "manhattan")) 
+```
+
+```{r, eval=(Clustering | AI)}
+set.seed(123)
+pam_clusters <- pam(x = datos, k = 4, metric = "manhattan")
+pam_clusters
+```
+
+```{r, eval=(Clustering | AI)}
+fviz_cluster(object = pam_clusters, data = datos, ellipse.type = "t",
+             repel = TRUE, show.clust.cent = T) +
+  labs(title = str_c("Resultados clustering 'Partitioning Around Medoids' con k = ", length(pam_clusters$id.med)))
+```
+
+## Cluster Jerárquicos
+
+<!-- Medir la distancia entre cluster -->
+
+<!-- AVERAGE LINKAGE: en el método de la media, la distancia entre clusters se calcula como la distancia media, o promedio de las distancias, entre pares de observaciones considerando todos los pares formados por un elemento en cada cluster.      -->
+
+<!-- SINGLE LINKAGE (vencino más próximo): En el método del vecino más próximo la distancia entre dos clusters es el mínimo de las distancias entre un objeto cualquiera de uno de los clusters y un objeto cualquiera del otro.     -->
+
+<!-- COMPLETE LINKAGE (vencino más lejano): En el método del vecino más lejano la distancia entre dos clusters es el máximo de -->
+
+<!-- todas las distancias entre elementos de un cluster y elementos del otro.     -->
+
+## Modelo óptimo considerando distintas matrices de distancias y linkage intercluster
+
+<!-- Coeficiente cofenético: Este criterio pretende elegir la partición que resulte más fiel a las distancias originales, utilizando el coeficiente de correlación de Pearson. -->
+
+<!-- Una vez creado el dendrograma, hay que evaluar hasta qué punto su estructura refleja las distancias originales entre observaciones. Una forma de hacerlo es empleando el coeficiente de correlación entre las distancias cophenetic del dendrograma (altura de los nodos) y la matriz de distancias original. Cuanto más cercano es el valor a 1, mejor refleja el dendrograma la verdadera similitud entre las observaciones. Valores superiores a 0.75 suelen considerarse como buenos. Esta medida puede emplearse como criterio de ayuda para escoger entre los distintos métodos de linkage. -->
+
+```{r, eval=(Clustering | AI)}
+# Matriz de distancias euclídeas
+distancias = c("euclidean", "maximum", "manhattan", "canberra", "binary", "minkowski")
+result = as_tibble()
+
+for (i in seq_along(distancias)) {
+  
+  mat_dist <- dist(x = datos, method =  distancias[i])
+  
+  hc_euclidea_complete <- hclust(d = mat_dist, method = "complete")
+  hc_euclidea_average  <- hclust(d = mat_dist, method = "average")
+  hc_euclidea_single  <- hclust(d = mat_dist, method = "single")
+  hc_euclidea_centroid  <- hclust(d = mat_dist, method = "centroid")
+  hc_euclidea_wardD <- hclust(d = mat_dist, method = "ward.D")
+
+  df = tribble(
+    ~"distancias",~"metodos_linkage", ~"coeficiente_cophenetic", 
+    distancias[i],"complete" , cor(x = mat_dist, cophenetic(hc_euclidea_complete)),
+    distancias[i],"average" , cor(x = mat_dist, cophenetic(hc_euclidea_average)),
+    distancias[i],"single", cor(x = mat_dist, cophenetic(hc_euclidea_single)),
+    distancias[i],"centroid", cor(x = mat_dist, cophenetic(hc_euclidea_centroid)),
+    distancias[i],"ward", cor(x = mat_dist, cophenetic(hc_euclidea_wardD))
+  )
+    
+  result <- result %>% 
+    bind_rows(df)
+  
+}
+
+result <- result %>% 
+  arrange(desc(coeficiente_cophenetic))
+
+result %>% 
+  kable(caption = "Tabla de los distintos modelos -considerando distintas matrices de distancias y linkage intercluster- y sus respectivos coeficientes cofeneticos (orden descendente)",
+        align = 'c', longtable = T)
+```
+
+```{r, eval=(Clustering | AI)}
+# Selecciono los tre modelos con mejor coeficiente cofenético
+clu1 = hclust(d = dist(x = datos, method =  result$distancias[[1]]), method = result$metodos_linkage[[1]])
+clu2 = hclust(d = dist(x = datos, method =  result$distancias[[2]]), method = result$metodos_linkage[[2]])
+clu3 = hclust(d = dist(x = datos, method =  result$distancias[[3]]), method = result$metodos_linkage[[3]])
+```
+
+```{r, eval=(Clustering | AI)}
+# graf param
+cex = 2
+k = 4 # Cuantos clusters
+n = nrow(datos)
+```
+
+```{r, eval=(Clustering | AI), fig.width=20, fig.height=18}
+
+plot(x = clu1, xlab = "", ylab = "", sub = "", hang = -1,
+     cex.lab=cex, cex.axis=cex, cex.main=cex, cex.sub=cex,
+     main = str_c("Modelo Óptimo con distancia: '", result$distancias[[1]], "' y método: '", result$metodos_linkage[[1]], "'"))
+MidPoint = (clu1$height[n-k] + clu1$height[n-k+1]) / 2
+abline(h = MidPoint, lty=2)
+```
+
+```{r, eval=(Clustering | AI), fig.width=20, fig.height=18}
+plot(x = clu2,  xlab = "", ylab = "", sub = "",hang = -1,
+      cex.lab=cex, cex.axis=cex, cex.main=cex, cex.sub=cex,
+     main = str_c("Segundo Modelo con distancia: '", result$distancias[[2]], "' y método: '", result$metodos_linkage[[2]], "'"))
+MidPoint = (clu2$height[n-k] + clu2$height[n-k+1]) / 2
+abline(h = MidPoint, lty=2)
+```
+
+```{r, eval=(Clustering | AI), fig.width=20, fig.height=18}
+plot(x = clu3,  xlab = "", ylab = "", sub = "",hang = -1, label.offset = 1,
+      cex.lab=cex, cex.axis=cex, cex.main=cex, cex.sub=cex,
+     main = str_c("Tercer Modelo con distancia: '", result$distancias[[3]], "' y método: '", result$metodos_linkage[[3]], "'"))
+MidPoint = (clu3$height[n-k] + clu3$height[n-k+1]) / 2
+abline(h = MidPoint, lty=2)
+```
+
+## Estudio de la tendencia de clustering
+
+<!-- Antes de aplicar un método de clustering a los datos es conveniente evaluar si hay indicios de que realmente existe algún tipo de agrupación en ellos. A este proceso se le conoce como assessing cluster tendecy y puede llevarse a cabo mediante test estadísticos (Hopkins statistic). -->
+
+<!-- Valores de H en torno a 0.5 indican que los datos estudiados se distribuyen uniformemente y que por lo tanto no tiene sentido aplicar clustering. Cuanto más se aproxime a 0 el estadístico H, más evidencias se tienen a favor de que existen agrupaciones en los datos y de que, si se aplica clustering correctamente, los grupos resultantes serán reales. -->
+
+
+```{r, eval=(Clustering | AI)}
+# Estadístico H para el set de datos
+# Hopkins statistic: If the value of Hopkins statistic is close to 1 (far above 0.5), then we can conclude that the dataset is significantly clusterable
+res <- get_clust_tendency(datos, n = nrow(df)-1)
+res$hopkins_stat
+```
+
+```{r, eval=(Clustering | AI), class.output="bg-warning"}
+if(res$hopkins_stat>0.75){
+  'Los datos presentan agrupamientos importante, con el estadístico Hopkins <= 0.75'
+} else if((res$hopkins_stat>0.05 & res$hopkins_stat<0.75)) {
+  'Los datos presentan cierto agrupamiento, con estadístico: 0.5 < H > 0.75'
+}else{
+  'Los datos no presentan cierto agrupamiento, con el estadístico Hopkins <= 0.5'
+  }
+```
+\pagebreak
+# PCA
+
+```{r, eval= (PCA | AI)}
+df <- readxl::read_excel("aspirantes.xlsx") %>% dplyr::select(-ID)
+```
+
+```{r, eval= (PCA | AI)}
+pca =  prcomp(df, center = TRUE, scale. = T) # trabajamos con la matriz correlacion
+```
+
+## Exploracion de datos
+
+```{r, eval= (PCA | AI)}
+str(df)
+```
+
+## Analisis PCA
+
+```{r, eval= (PCA | AI)}
+pca =  prcomp(df, center = TRUE, scale. = T) # trabajamos con la matriz correlacion
+```
+
+<!-- Los elementos center y scale almacenados en el objeto pca contienen la media y desviación típica de las variables originales, previa estandarización (en la escala original). -->
+
+```{r, eval= (PCA | AI)}
+pca$center
+```
+
+```{r, eval= (PCA | AI)}
+pca$scale
+```
+
+<!-- La matriz “rotation” proporciona los loadings de los componentes principales (cada columna contiene el vector de loadings de cada componente principal). La función los denomina matriz de rotación ya que si multiplicáramos la matriz de datos por *$rotation*, obtendríamos las coordenadas de los datos en el nuevo sistema rotado de coordenadas. Estas coordenadas se corresponden con los scores de los componentes principales.    En *rotation* contiene el valor de los loadings ϕ para cada componente (vector propio, autovector o eigenvector). El número máximo de componentes principales se corresponde con el mínimo(n-1,p), -->
+
+```{r, eval= (PCA | AI)}
+pca$rotation %>% head()
+```
+
+<!-- Cuando existe una alta correlación positiva entre todas las variables, el primer componente principal tiene todas sus coordenadas del mismo signo y puede interpretarse como un promedio ponderado de todas las variables, se interpreta como factor global de 'Tamaño'. Los restantes componentes se interpretan como factores ”de forma” y típicamente tienen coordenadas positivas y negativas, que implica que contraponen unos grupos de variables frente a otros.  -->
+
+<!-- Analizar en detalle el vector de *loadings* que forma cada componente ayuda a determinar què informaciòn aporta cada una. Por ejemplo la primera componente es el resultado de la siguiente combinación lineal de las variables, en este caso los tramos de la carrera. -->
+
+<!-- La funciòn tambièn calcula automáticamente el valor de las componentes principales para cada observaciòn o individuo del data set (principal componente score o simplemente scores) mediante la multiplicación de los datos con los loadings como sigue:  se tienen que multiplicar los eigenvectors transpuestos por los datos originales centrados y también transpuestos. -->
+
+```{r, eval= (PCA | AI)}
+pca$x %>% head()
+```
+
+## Varianza explicada por las CP
+
+<!-- La varianza explicada por cada componente principal (correspondiente a los eigenvalores) la obtenemos elevando al cuadrado la desviación estándar:   -->
+
+*desviación estándar de cada componente principal*
+
+```{r, eval= (PCA | AI)}
+pca$sdev
+```
+
+*varianza*
+
+```{r, eval= (PCA | AI)}
+pca$sdev^2
+```
+
+<!-- A traves de summary accedemos a los datos de varición -->
+
+```{r, eval= (PCA | AI)}
+summary(pca)
+```
+
+<!-- Tener presente que los autovalores de esta matriz corresponden a la varianza de la componente y por lo tanto debe elevarse al cuadrado el desvío estandar (fila 1) -->
+
+
+## Reprsentaciones Graficas: BIPLOT
+
+<!-- El biplot tiene la particularidad de facilitar: -->
+<!-- La interpretación de las distancias entre individuos en términos de similitud en relación a las variables consideradas.     -->
+<!-- La búsqueda de grupos o patrones.     -->
+<!-- La explicación de las componentes principales utilizando las correlaciones con las variables originales.     -->
+<!-- El estudio de las posiciones relativas de los individuos entre sí y respecto de las componentes principales graficadas.    -->
+
+
+```{r, eval= (PCA | AI)}
+biplot(x = pca, scale = 0, cex = 0.6, col = c("blue4", "brown3"))
+```
+<!-- Interpretacion: Para los vectores (variables), nos fijamos en su longitud y en el ángulo con respecto a los ejes de las componentes principales y entre ellos mismos: -->
+
+<!-- Ángulo: cuanto más paralelo es un vector al eje de una componente, más ha contribuido a la creación de la misma. Con ello obtienes información sobre qué variable(s) ha sido más determinante para crear cada componente, y si entre las variables (y cuales) hay correlaciones. Ángulos pequeños entre vectores representa alta correlación entre las variables implicadas (observaciones con valores altos en una de esas variables tendrá valores altos en la variable o variables correlacionadas); ángulos rectos representan falta de correlación, y ángulos opuestos representan correlación negativa (una observación con valores altos en una de las variables irá acompañado de valores bajos en la otra). -->
+
+<!-- Longitud: cuanto mayor la longitud de un vector relacionado con x variable (en un rango normalizado de 0 a 1), mayor variabilidad de dicha variable está contenida en la representación de las dos componentes del biplot, es decir, mejor está representada su información en el gráfico. -->
+
+<!-- Para los scores (observaciones), nos fijamos en los posibles agrupamientos. Puntuaciones próximas representan observaciones de similares características. Puntuaciones con valores de las variables próximas a la media se sitúan más cerca del centro del biplot (0, 0). El resto representan variabilidades normales o extremas (outliers).  -->
+
+## Proporciòn de Varianza Explicada
+
+```{r, eval= (PCA | AI)}
+prop_varianza = pca$sdev^2 / sum(pca$sdev^2)
+
+ggplot(data = data.frame(prop_varianza, pc = 1:length(prop_varianza)),
+       aes(x = pc, y = prop_varianza)) +
+  geom_col(width = 0.3) +
+  geom_text(label = round(prop_varianza * 100, digits = 1)) +
+  scale_y_continuous(limits = c(0,1)) +
+  theme_bw() +
+  labs(x = "Componente principal",
+       y = "Prop. de varianza explicada")
+
+```
+
+## Proporcioan acumulada en las componentes
+
+```{r, eval= (PCA | AI)}
+prop_varianza_acum <- cumsum(prop_varianza)
+
+ggplot(data = data.frame(prop_varianza_acum, pc = 1:length(prop_varianza_acum)),
+       aes(x = pc, y = prop_varianza_acum, group = 1)) +
+  geom_point() +
+  geom_line() +
+  geom_text(label = round(prop_varianza_acum * 100, digits = 1), vjust =-.5) +
+  labs(x = "Componente principal",
+       y = "Prop. varianza explicada acumulada")
+
+```
+
+## FactomineR
+
+```{r, eval= (PCA | AI)}
+pca2.nci <- PCA(X = df, scale.unit = TRUE, ncp = 64, graph = FALSE)
+```
+
+```{r, eval= (PCA | AI)}
+print(pca2.nci)
+```
+```{r, eval= (PCA | AI)}
+pca2.nci$eig
+```
+
+<!-- Como es de esperar, el eigenvalor (varianza explicada) es mayor en la primera componente que en las subsiguientes. -->
+
+```{r, eval= (PCA | AI)}
+summary(pca2.nci)
+```
+ 
+## Representacion 
+
+<!-- Cabe destacar que la representación gráfica de las observaciones y las variables es distinta: las observaciones se representan mediante sus proyecciones, mientras que las variables se representan mediante sus correlaciones. La correlación entre una componente y una variable estima la información que comparten -> loadings, por lo que las variables se pueden representar como puntos en el espacio de los componentes utilizando sus loadings como coordenadas. -->
+
+<!-- Observaciones -->
+<!-- Se muestran dos ejemplos para representar las observaciones sobre las dos primeras componentes principales: -->
+
+ 
+```{r, eval= (PCA | AI)}
+fviz_pca_ind(pca2.nci, geom.ind = "point", 
+             col.ind = "#FC4E07", 
+             axes = c(1, 2), # axes 1 y 2 se corresponden con PC1 y PC2, pudiendo escoger otros
+             pointsize = 1.5) 
+```
+ 
+## Representacion de Variables
+
+<!-- Para representar las variables sobre las dos primeras componentes principales podemos utilizar la función fviz_pca_var() del paquete factoextra. La correlación entre una variable y una componente principal se utiliza como la coordenada de dicha variable sobre la componente principal. De esta manera podemos obtener un gráfico de correlación de variables: -->
+
+```{r, eval= (PCA | AI)}
+fviz_pca_var(pca2.nci, col.var = "black",repel = TRUE)
+```
+
+Grafico muestra:
+- %varianza expliada por cada componente (dim1 y dim2)
+
+```{r, eval= (PCA | AI)}
+fviz_screeplot(pca2.nci, addlabels = TRUE)
+```
+
+## Contribuciones de las variables en los ejes
+
+las contribuciones a la inercia de los ejes sirven para detectar los variables mas relevantes en cada.
+
+```{r, eval= (PCA | AI)}
+var <- get_pca_var(pca2.nci)
+corrplot(var$cos2, is.corr=FALSE) 
+```
+ 
+## Conclusión
+
+- Considerando el criterio de Kaiser (más el ajuste derivado de las simulaciones de Montecarlo) que admite autovalores hasta 0.7, las componentes que se emplearían son: `r if(PCA | AI){as.tibble(pca2.nci$eig) %>% mutate('comp' = str_c('comp', 1:nrow(.))) %>% filter(eigenvalue >= 0.7) %>% .$comp}`.              
+
+- Considerando el criterio de variabilidad explicada del componente, eligiendo aquellas cuyo % de variabilidad no sea menor a 5%, las componentes que se emplearían son: `r if(PCA | AI){as.tibble(pca2.nci$eig) %>% mutate('comp' = str_c('comp', 1:nrow(.))) %>% rename(ptje = 'percentage of variance') %>% filter(ptje > 5) %>% .$comp}`.     
+
+
+
+\pagebreak
+# Sesion
+```{r}
+sessionInfo()
+```
+
