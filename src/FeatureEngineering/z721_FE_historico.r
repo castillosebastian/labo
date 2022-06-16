@@ -290,8 +290,8 @@ cols_lagueables  <- copy( setdiff( colnames(dataset), kcampos_fijos ) )
 Lags( cols_lagueables, 1, TRUE )   #calculo los lags de orden  i
 
 #Aqui se podrian descomentar
-#Lags( cols_lagueables, 2 TRUE )   #calculo los lags de orden  2
-
+Lags( cols_lagueables, 2, TRUE )   #calculo los lags de orden  2
+Lags( cols_lagueables, 3, TRUE )   #calculo los lags de orden  3
 
 #calculo la media movil, ventana de 6 meses  para las columnas  cols_laguables
 #por ahora, voy por el camino lento ... muerte a R y Python ...
