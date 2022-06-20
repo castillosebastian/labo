@@ -19,7 +19,7 @@ options(error = function() {
   stop("exiting after script error") 
 })
 
-kdataset_salida  <- "paquete_premium_ext_721.csv.gz"
+kdataset_salida  <- "paquete_premium_ext_722.csv.gz"
 kcampos_fijos  <- c( "numero_de_cliente", "clase_ternaria", "foto_mes" )
 
 #------------------------------------------------------------------------------
