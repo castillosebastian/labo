@@ -72,8 +72,8 @@ campos_buenos  <- setdiff( colnames(dataset), c("clase_ternaria","clase01") )
 dataset[ , train  := 0L ]
 
 dataset[ foto_mes >= kfinal_mes_desde &
-         foto_mes <= kfinal_mes_hasta &
-         !( foto_mes %in% kfinal_meses_malos), 
+           foto_mes <= kfinal_mes_hasta,
+         #!( foto_mes %in% kfinal_meses_malos), 
          train  := 1L ]
 
 #--------------------------------------

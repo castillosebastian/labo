@@ -314,6 +314,14 @@ dataset[  , paste0( cols_lagueables, "_mean6") :=  frollmean( .SD, n= 6L, align=
           by= numero_de_cliente,
           .SDcols= cols_lagueables ]
 
+dataset[  , paste0( cols_lagueables, "_mean3") :=  frollmean( .SD, n= 3L, align='right', na.rm= TRUE ), 
+          by= numero_de_cliente,
+          .SDcols= cols_lagueables ]
+
+dataset[  , paste0( cols_lagueables, "_mean9") :=  frollmean( .SD, n= 9L, align='right', na.rm= TRUE ), 
+          by= numero_de_cliente,
+          .SDcols= cols_lagueables ]
+
 
 
 #--------------------------------------
