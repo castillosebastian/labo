@@ -1,0 +1,35 @@
+---
+title: "Presentacion"
+author: "Sebastian Castillo"
+date: "`r format(Sys.Date(), '%d de %B de %Y') `"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("Unidad0_repos_and_tools.R")
+```
+
+
+
+
+
+## Feature Engeniering
+
+- Vijayakumar señala que: "The absence of mobile banking, zerointerest personal loans, access to ATMs, and customer care and support were critical driving factors
+to churn".
+- Segmentación de clientes: puede ser un factor de mejora? Banks need to eloquently reset their customer segmentation to fulfil suitable needs, such as remote access and digital services. Such a resetting will help banks identify the right target segment who are highly device-centric and digitally aware (Vijayakumar, p.2)
+
+
+
+## Bibliografía reseñada
+
+- Vijayakumar Bharathi, et all, *An Ensemble Model for Predicting Retail Banking Churn in the Youth Segment of Customers*, [link](https://www.mdpi.com/2306-5729/7/5/61/pdf?version=1653558321).  
+- Kaggle, Churn Problem for Bank Customer, https://www.kaggle.com/code/mathchi/churn-problem-for-bank-customer?scriptVersionId=40220228&cellId=28
+
+
+
+```{r}
+result <- fread ("https://00f74ba44b85a26d74d1bb0095570701c113314143-apidata.googleusercontent.com/download/storage/v1/b/lechu77007/o/exp%2FHT7310%2FBO_log.txt?jk=AFshE3WlZW7SXFzQHuzcSrriwRNVdLZfEKd7F9iODmEBxp78Jfx1i3S5q-08MkRRSOUmdsl1JdALB6WMAEuoS-H-IdCBQuF3rAVpp4lTSR0oBi0-qNcsJ1rvIPZEdPPIooJ8uXu3s2A6ysD0G0gh5LgEH56s7c1uJNinHK3JEHEf2M8YjMOI9NSbXHhOhoxulAR3dNWYISMo_40H66cpsQuxy3c_5960wDi4mhKxDe36YawO1768nIa_xxxk90okFn_E4V72j-8ALO38szd_VffKfacC0uyURufwI5Pz6RHswbB00WhHocGev2xkhS3tB40gsVfGMCXdKTz2O0JLx0iq82vKUxsttYxA8K1U_gfp5rNC7d-5xYGuykQQKEuG1OjNgQ7sHy7H0RJM6L3gz4VvlamP9RA67LaC3SKmp6aoMCjuFZszDa1Ex2dl2UpfYn2ESflUXd52C-Q8D4OYwdoDl9l1IRsShTgXYcjLapDv-vbWQPzVTQMMamFSQ94eKThwH7IruIZCncmPI4OPeSakrpCNUlgLUvt9TTZo4T3NqST3dack6GNLxR-YuQCKHyeoti6dANjdB5zFjzGmlbRRJfApxVlaVADplKgu-GVNjDKMXY95HNnuUlzWqNTzptSuWmrAj2EDsYUbZnmWjUiRfw4Hap9fdkMvWXuhS3WIIuOGL7-X--POH5vJhKktkT1pkBHjpbYOSkKz6fAzPHkyK190y6ksFYGYUhiiIWHV-oGGF_Tf9kvytOxUe9T5V0an7pCc3kymkAf9EiJjpYOCFnhTIPpBmknnwtvep9983_ufvjG8xDKnW_UYcnoNV_V0KP_M5R6z_VqrOi0r2I8Ow1qfLF51qhCrEkN8xW0Aj5TD9o-7bShLPU0XgcSO4Vf_39yoaU44HJj-vNZX4NbsyRDlIckYOWHwQsvfOLLEKriZI8gW77Qx7uUx_N2id8mQz4Gcd1qSEMe8QFyPiDVe-HymTJyB4ZtKf8SwH9qOybbb6_kIlQ&isca=1")
+```
+
