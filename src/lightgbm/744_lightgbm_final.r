@@ -18,7 +18,7 @@ require("lightgbm")
 setwd("~/buckets/b1/")   #Establezco el Working Directory
 
 
-kprefijo       <- "KA742"
+kprefijo       <- "KA744"
 ksemilla_azar  <- 777781  #Aqui poner la propia semilla
 kdataset       <- "./datasets/paquete_premium_ext_722.csv.gz"
 
@@ -31,11 +31,11 @@ kfinal_mes_hasta    <- 201911        #mes hasta donde entreno, inclusive
 #aqui copiar a mano lo menor de la Bayesian Optimization
 # si es de IT y le gusta automatizar todo, no proteste, ya llegara con MLOps
 kmax_bin           <-    31
-klearning_rate     <-     0.01026305
-knum_iterations    <-   674
-knum_leaves        <-  61
-kmin_data_in_leaf  <- 15172
-kfeature_fraction  <-     0.3580651
+klearning_rate     <-     0.0131094708
+knum_iterations    <-   951
+knum_leaves        <-  1002
+kmin_data_in_leaf  <- 16918
+kfeature_fraction  <-     0.5609450635
 
 
 
