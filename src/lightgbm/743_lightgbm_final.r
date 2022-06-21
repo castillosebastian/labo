@@ -18,24 +18,24 @@ require("lightgbm")
 setwd("~/buckets/b1/")   #Establezco el Working Directory
 
 
-kprefijo       <- "KA741"
+kprefijo       <- "KA742"
 ksemilla_azar  <- 777781  #Aqui poner la propia semilla
-kdataset       <- "./datasets/paquete_premium_ext_721.csv.gz"
+kdataset       <- "./datasets/paquete_premium_ext_722.csv.gz"
 
 #donde entrenar
-kfinal_mes_desde    <- 201912        #mes desde donde entreno
-kfinal_mes_hasta    <- 202011        #mes hasta donde entreno, inclusive
-kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
+kfinal_mes_desde    <- 201801        #mes desde donde entreno
+kfinal_mes_hasta    <- 201911        #mes hasta donde entreno, inclusive
+#kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
 
 #hiperparametros de LightGBM
 #aqui copiar a mano lo menor de la Bayesian Optimization
 # si es de IT y le gusta automatizar todo, no proteste, ya llegara con MLOps
 kmax_bin           <-    31
-klearning_rate     <-     0.0131094708
-knum_iterations    <-   951
-knum_leaves        <-  1002
-kmin_data_in_leaf  <- 16918
-kfeature_fraction  <-     0.5609450635
+klearning_rate     <-     0.01026305
+knum_iterations    <-   674
+knum_leaves        <-  61
+kmin_data_in_leaf  <- 15172
+kfeature_fraction  <-     0.3580651
 
 
 
@@ -72,8 +72,8 @@ campos_buenos  <- setdiff( colnames(dataset), c("clase_ternaria","clase01") )
 dataset[ , train  := 0L ]
 
 dataset[ foto_mes >= kfinal_mes_desde &
-         foto_mes <= kfinal_mes_hasta &
-         !( foto_mes %in% kfinal_meses_malos), 
+           foto_mes <= kfinal_mes_hasta,
+         #!( foto_mes %in% kfinal_meses_malos), 
          train  := 1L ]
 
 #--------------------------------------

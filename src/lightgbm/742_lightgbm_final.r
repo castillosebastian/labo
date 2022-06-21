@@ -20,12 +20,12 @@ setwd("~/buckets/b1/")   #Establezco el Working Directory
 
 kprefijo       <- "KA742"
 ksemilla_azar  <- 777781  #Aqui poner la propia semilla
-kdataset       <- "./datasets/paquete_premium_ext_721.csv.gz"
+kdataset       <- "./datasets/paquete_premium_ext_722.csv.gz"
 
 #donde entrenar
 kfinal_mes_desde    <- 201812        #mes desde donde entreno
 kfinal_mes_hasta    <- 201911        #mes hasta donde entreno, inclusive
-#kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
+kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
 
 #hiperparametros de LightGBM
 #aqui copiar a mano lo menor de la Bayesian Optimization
