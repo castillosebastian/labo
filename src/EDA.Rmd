@@ -291,7 +291,9 @@ df_numeric %>%
 
 
 
+# Importancia en LightGBM
 
+unico problema es *data_drifting*
 
 
 

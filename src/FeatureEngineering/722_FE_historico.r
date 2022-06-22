@@ -223,6 +223,7 @@ AgregarVariables  <- function( dataset )
   dataset[ , mrentabilidad_exp  := mrentabilidad ^ 2]
   dataset[ , mrentabilidad_annual_exp  :=  mrentabilidad_annual ^ 2 ]
   
+  # control quarter comando "shift" data table
 
   #valvula de seguridad para evitar valores infinitos
   #paso los infinitos a NULOS
