@@ -40,9 +40,9 @@ ksemilla_azar  <- 777781  #Aqui poner la propia semilla
 kdataset       <- "./datasets/paquete_premium_ext_722.csv.gz"
 
 #donde entrenar
-ktrain_mes_desde    <- 201801        #mes desde donde entreno
-ktrain_mes_hasta    <- 202002        #mes hasta donde entreno, inclusive
-#ktrain_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
+ktrain_mes_desde    <- 201912        #mes desde donde entreno
+ktrain_mes_hasta    <- 202011        #mes hasta donde entreno, inclusive
+ktrain_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
 
 
 kexperimento   <- paste0( kprefijo, "0" )
@@ -219,8 +219,8 @@ campos_buenos  <- setdiff( colnames(dataset), c("clase_ternaria","clase01") )
 
 dataset[ , train  := 0L ]
 dataset[ foto_mes >= ktrain_mes_desde & 
-         foto_mes <= ktrain_mes_hasta, #&  
-         #! (foto_mes %in% ktrain_meses_malos ) ,
+           foto_mes <= ktrain_mes_hasta &  
+           ! (foto_mes %in% ktrain_meses_malos ) ,
          train  := 1L ]
 
 #--------------------------------------
