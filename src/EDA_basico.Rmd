@@ -1,0 +1,89 @@
+---
+title: "EDA"
+author: "Sebastian Castillo"
+date: '2022-06-25'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r}
+df <- fread("~/R/labo/datasets/paquete_premium_202011.csv", stringsAsFactors= TRUE)
+```
+
+```{r}
+table(df$clase_ternaria)
+```
+
+```{r}
+df_numeric = df %>% dplyr::select_if(is.numeric)
+df_numeric = as_tibble(df_numeric)
+var_target = df %>% dplyr::select(clase_ternaria) #%>% 
+  # mutate(clase_ternaria = case_when(
+  #   clase_ternaria == "CONTINUA"  ~ 1,
+  #   clase_ternaria == 'BAJA+1' ~ -1,
+  #   clase_ternaria == 'BAJA+2' ~ -2))
+
+```
+
+### Target, Variables y Relaciones
+
+```{r}
+var_fmovimientos = c("ctarjeta_debito_trx", "ctarjeta_visa_trx", "mtarjeta_visa_consumo", "ctarjeta_master_trx", "cprestamos_personales", "cprestamos_prendarios", "cprestamos_prendarios", "cprestamos_hipotecarios", "cplazo_fijo", "cinversion1", "minversion1_pesos", "cinversion2", "minversion2", "cpayroll_trx", "cpayroll2_trx",  "ccuenta_debitos_automaticos", "mcuenta_debitos_automaticos", "ctarjeta_visa_debitos_automaticos", "mtarjeta_visa_debitos_automaticos", "ctarjeta_master_debitos_automaticos", "mttarjeta_master_debitos_automaticos", "cpagodeservicios", "mpagodeservicios")
+
+var_productos = c("cproductos", "tcuentas", "ccuenta_corriente", "mcuenta_corriente", "ccaja_ahorro", "mcaja_ahorro", "mcaja_ahorro_dolares", "mdescubierto_preacordado", "mcuentas_saldo", "ctarjeta_debito", "mautoservicio", "ctarjeta_visa", "ctarjeta_master", "mtarjeta_master_consumo", "cprestamos_personales",  "mprestamos_personales", "cprestamos_prendarios", "mprestamos_prendarios", "cprestamos_hipotecarios", "mprestamos_hipotecarios", "cinversion1", "minversion1_pesos", "cseguro_vida","cseguro_auto", "ccaja_seguridad")
+
+var_elegidas = c("ctrx_quarter")
+
+```
+
+
+```{r}
+df_numeric %>% 
+  dplyr::select(var_elegidas) %>% 
+  scale( center = TRUE, scale = TRUE) %>%  # Se escalan las variables, (x-median)/sd.
+  bind_cols(var_target) %>%  
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', -clase_ternaria) %>% 
+  rename(grupo = clase_ternaria) %>% 
+  ggplot(aes(x=variables, y=cantidad, color=as.factor(grupo))) + 
+  geom_boxplot() +
+  #stat_summary(fun.y=mean, geom="point", color="red") +
+  facet_wrap(~variables, scales = 'free') +
+  labs(title = "Boxplot por grupo con variables escaladas")
+
+```
+
+
+# cliente baja+2
+
+```{r}
+cliente_baja2 = df$numero_de_cliente[df$clase_ternaria == "BAJA+2"]
+fotomescliente = df %>% filter(numero_de_cliente == cliente_baja2[1])
+fotomeses <- t(fotomescliente) %>% as.data.frame() %>% setNames(fotomescliente[,1])
+fotomeses
+```
+
+
+# cliente continua
+
+
+```{r}
+cliente_continua = df$numero_de_cliente[df$clase_ternaria == "CONTINUA"]
+fotomescliente = df %>% filter(numero_de_cliente == cliente_continua[1])
+fotomeses <- t(fotomescliente) %>% as.data.frame() %>% setNames(fotomescliente[,1])
+fotomeses
+
+```
+
