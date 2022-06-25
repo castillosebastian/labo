@@ -54,17 +54,17 @@ DriftEliminar  <- function( dataset, variables )
 #Autor:  Santiago Dellachiesa, UAustral 2021
 #A las variables que tienen nulos, les agrega una nueva variable el dummy de is es nulo o no {0, 1}
 
-DummiesNA  <- function( dataset )
-{
-  gc()
-  nulos  <- colSums( is.na(dataset[ foto_mes %in% 202101 ]) )  #cuento la cantidad de nulos por columna
-  colsconNA  <- names( which(  nulos > 0 ) )
-
-  dataset[ , paste0( colsconNA, "_isNA") :=  lapply( .SD,  is.na ),
-             .SDcols= colsconNA]
-
-  ReportarCampos( dataset )
-}
+# DummiesNA  <- function( dataset )
+# {
+#   gc()
+#   nulos  <- colSums( is.na(dataset[ foto_mes %in% 202101 ]) )  #cuento la cantidad de nulos por columna
+#   colsconNA  <- names( which(  nulos > 0 ) )
+# 
+#   dataset[ , paste0( colsconNA, "_isNA") :=  lapply( .SD,  is.na ),
+#              .SDcols= colsconNA]
+# 
+#   ReportarCampos( dataset )
+# }
 #------------------------------------------------------------------------------
 
 CorregirCampoMes  <- function( pcampo, pmeses )
@@ -352,6 +352,11 @@ AgregarVariables  <- function( dataset )
   dataset[ , mvr_mpagominimo         := mv_mpagominimo  / mv_mlimitecompra ]
 
   #Aqui debe usted agregar sus propias nuevas variables
+  
+  # Ver valor monetario normalizado 
+  # Aplanar variables ej. movimientos-saldos => vairable sobre cuánto entró, cuando salio, 
+  # Medias moviles, 
+  
   # Cantidad de productos / edad
   dataset[ , cproductos_sobre_edad  := cproductos / cliente_edad ]
   

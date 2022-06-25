@@ -12,6 +12,7 @@ library(kableExtra)
 ```
 
 ```{r}
+setwd("~/R/labo/datasets")
 DiccionarioDatos <- readr::read_csv("DiccionarioDatos.csv")
 
 DiccionarioDatos %>% 
