@@ -1,0 +1,143 @@
+---
+title: "EDA"
+author: "Sebastian Castillo"
+date: '2022-06-25'
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+
+```{r}
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+```
+
+```{r}
+setwd("~/buckets/b1/")   #Establezco el Working Directory
+kdataset       <- "./datasets/paquete_premium_ext_722.csv.gz"
+df =  fread(kdataset, stringsAsFactors= TRUE)
+```
+
+```{r}
+df_numeric = df %>% dplyr::select_if(is.numeric)
+df_numeric = as_tibble(df_numeric)
+var_target = df %>% dplyr::select(clase_ternaria) #%>% 
+  # mutate(clase_ternaria = case_when(
+  #   clase_ternaria == "CONTINUA"  ~ 1,
+  #   clase_ternaria == 'BAJA+1' ~ -1,
+  #   clase_ternaria == 'BAJA+2' ~ -2))
+
+```
+
+```{r}
+activo_boxplot = T
+```
+
+```{r, eval = activo_boxplot, fig.height=18, fig.width=18}
+df_numeric %>% 
+  #dplyr::select(var_elegidas) %>% 
+  dplyr::select(1:20) %>% 
+  scale( center = TRUE, scale = TRUE) %>%  # Se escalan las variables, (x-median)/sd.
+  bind_cols(var_target) %>%  
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', -clase_ternaria) %>% 
+  rename(grupo = clase_ternaria) %>% 
+  ggplot(aes(x=variables, y=cantidad, color=as.factor(grupo))) + 
+  geom_boxplot() +
+  #stat_summary(fun.y=mean, geom="point", color="red") +
+  facet_wrap(~variables, scales = 'free') +
+  labs(title = "Boxplot por grupo con variables escaladas")
+
+```
+
+```{r, eval = activo_boxplot, fig.height=18, fig.width=18}
+df_numeric %>% 
+  #dplyr::select(var_elegidas) %>% 
+  dplyr::select(21:40) %>% 
+  scale( center = TRUE, scale = TRUE) %>%  # Se escalan las variables, (x-median)/sd.
+  bind_cols(var_target) %>%  
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', -clase_ternaria) %>% 
+  rename(grupo = clase_ternaria) %>% 
+  ggplot(aes(x=variables, y=cantidad, color=as.factor(grupo))) + 
+  geom_boxplot() +
+  #stat_summary(fun.y=mean, geom="point", color="red") +
+  facet_wrap(~variables, scales = 'free') +
+  labs(title = "Boxplot por grupo con variables escaladas")
+
+```
+
+```{r, eval = activo_boxplot, fig.height=18, fig.width=18}
+df_numeric %>% 
+  #dplyr::select(var_elegidas) %>% 
+  dplyr::select(41:60) %>% 
+  scale( center = TRUE, scale = TRUE) %>%  # Se escalan las variables, (x-median)/sd.
+  bind_cols(var_target) %>%  
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', -clase_ternaria) %>% 
+  rename(grupo = clase_ternaria) %>% 
+  ggplot(aes(x=variables, y=cantidad, color=as.factor(grupo))) + 
+  geom_boxplot() +
+  #stat_summary(fun.y=mean, geom="point", color="red") +
+  facet_wrap(~variables, scales = 'free') +
+  labs(title = "Boxplot por grupo con variables escaladas")
+
+```
+
+```{r, eval = activo_boxplot, fig.height=18, fig.width=18}
+df_numeric %>% 
+  #dplyr::select(var_elegidas) %>% 
+  dplyr::select(61:80) %>% 
+  scale( center = TRUE, scale = TRUE) %>%  # Se escalan las variables, (x-median)/sd.
+  bind_cols(var_target) %>%  
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', -clase_ternaria) %>% 
+  rename(grupo = clase_ternaria) %>% 
+  ggplot(aes(x=variables, y=cantidad, color=as.factor(grupo))) + 
+  geom_boxplot() +
+  #stat_summary(fun.y=mean, geom="point", color="red") +
+  facet_wrap(~variables, scales = 'free') +
+  labs(title = "Boxplot por grupo con variables escaladas")
+
+```
+
+```{r, eval = activo_boxplot, fig.height=18, fig.width=18}
+df_numeric %>% 
+  #dplyr::select(var_elegidas) %>% 
+  dplyr::select(81:100) %>% 
+  scale( center = TRUE, scale = TRUE) %>%  # Se escalan las variables, (x-median)/sd.
+  bind_cols(var_target) %>%  
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', -clase_ternaria) %>% 
+  rename(grupo = clase_ternaria) %>% 
+  ggplot(aes(x=variables, y=cantidad, color=as.factor(grupo))) + 
+  geom_boxplot() +
+  #stat_summary(fun.y=mean, geom="point", color="red") +
+  facet_wrap(~variables, scales = 'free') +
+  labs(title = "Boxplot por grupo con variables escaladas")
+
+```
+
+```{r, eval = activo_boxplot, fig.height=18, fig.width=18}
+df_numeric %>% 
+  #dplyr::select(var_elegidas) %>% 
+  dplyr::select(101:120) %>% 
+  scale( center = TRUE, scale = TRUE) %>%  # Se escalan las variables, (x-median)/sd.
+  bind_cols(var_target) %>%  
+  pivot_longer(names_to = 'variables', values_to = 'cantidad', -clase_ternaria) %>% 
+  rename(grupo = clase_ternaria) %>% 
+  ggplot(aes(x=variables, y=cantidad, color=as.factor(grupo))) + 
+  geom_boxplot() +
+  #stat_summary(fun.y=mean, geom="point", color="red") +
+  facet_wrap(~variables, scales = 'free') +
+  labs(title = "Boxplot por grupo con variables escaladas")
+
+```
+
+```{r}
+summary(df)
+```
+
