@@ -723,6 +723,8 @@ setorderv( dataset, PARAM$const$campos_sort )
 
 AgregarMes( dataset )  #agrego el mes del año
 
+if( length( PARAM$variablesdrift) > 0 )    DriftEliminar( dataset, PARAM$variablesdrift )
+
 if( PARAM$dummiesNA )  DummiesNA( dataset )  #esta linea debe ir ANTES de Corregir  !!
 
 if( PARAM$corregir == "ClaudioCastillo" )  CorregirClaudioCastillo( dataset )  #esta linea debe ir DESPUES de  DummiesNA
