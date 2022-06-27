@@ -1,0 +1,168 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(data.table)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(readr)
+library(stringr)
+setwd("~/R/labo/datasets")
+paquete_premium_202011 <- read_csv("paquete_premium_202011.csv")
+```
+
+# Variable 'ctrx_quarter' sin outliers
+
+Cantidad de movimientos voluntarios en las cuentas bancarias ( no tarjeta de credito ) que el cliente realizó en los ultimos 90 dias.
+
+```{r}
+paquete_premium_202011 %>% 
+  filter(ctrx_quarter < 50) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=ctrx_quarter, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+
+# Variable 'ctrx_quarter' en un cliente CONTINUA
+
+
+```{r}
+cliente_continua <- read_csv("/home/sebacastillo/R/labo/datasets/clientes_ejemplos/44577575.csv")
+```
+
+```{r}
+cliente_continua_crtx <- as.integer(t(cliente_continua[cliente_continua$nada == "ctrx_quarter", ]))
+plot(cliente_continua_crtx, type = "b") 
+```
+
+```{r}
+
+clientebaja <- read_csv("/home/sebacastillo/R/labo/datasets/clientes_ejemplos/4572253.csv")
+
+```
+
+```{r}
+clientebaja_crtx <- as.integer(t(clientebaja[clientebaja$nada == "ctrx_quarter", ]))
+plot(clientebaja_crtx, type = "b") 
+```
+
+## tune:
+
+Tdolo lo que se pueda desarrollar esta variable
+- medias moviles ctrx_quarter
+- media,mediana...
+- otras
+
+# Variable mcaja_ahorro
+
+```{r}
+clientebaja %>% 
+  filter(str_detect(nada, "foto_mes|ternaria|mcaja_ahorro"))
+```
+
+
+```{r}
+paquete_premium_202011 %>% 
+  #mutate(mcaja_ahorro = scale(mcaja_ahorro, center = TRUE, scale = TRUE)) %>%  # Se escalan las variables, (x-median)/sd.
+  #filter(mcaja_ahorro < 10) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=mcaja_ahorro, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+
+## tune:
+
+- medias moviles ctrx_quarter
+- - media,mediana...
+
+# Variable mtarjeta_visa_consumo
+
+## Baja
+
+```{r}
+clientebaja %>% 
+  filter(str_detect(nada, "foto_mes|ternaria|mtarjeta_visa_consumo"))
+```
+
+```{r}
+cliente_continua %>% 
+  filter(str_detect(nada, "foto_mes|ternaria|tarjeta"))
+```
+
+```{r}
+cliente_continua2 <- read_csv("/home/sebacastillo/R/labo/datasets/clientes_ejemplos/4572300.csv")
+```
+
+```{r}
+cliente_continua2 %>% 
+  filter(str_detect(nada, "foto_mes|ternaria|tarjeta"))
+```
+
+```{r}
+paquete_premium_202011 %>% 
+  filter(mtarjeta_visa_consumo < 10000) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=mtarjeta_visa_consumo, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+
+## tune:
+
+- El cliente continua transacciona con cuaquier tarjeta: visa o master, mirando una sola puede tener 0 transacción pero eso no lo hace un cliente en proceso de baja. 
+- medias moviles ctrx_quarter
+- media,mediana...
+
+# Variable pyroll
+
+```{r}
+paquete_premium_202011 %>% 
+  filter(cpayroll_trx < 10) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=cpayroll_trx, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+# Variable mrentabilidad
+
+```{r}
+paquete_premium_202011 %>% 
+  #filter(mrentabilidad < 10) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=mrentabilidad, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+
+# Variable catm_trx y catm_trx_other
+
+```{r}
+paquete_premium_202011 %>% 
+  #filter(catm_trx < 10) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=catm_trx, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+
+```{r}
+paquete_premium_202011 %>% 
+  #filter(catm_trx < 10) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=catm_trx_other, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+
+```{r}
+paquete_premium_202011 %>% 
+  rowwise() %>% mutate(ratio_cajero = catm_trx/catm_trx_other) %>% 
+  #filter(catm_trx < 10) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=ratio_cajero, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+```
+
+# tune:
+- agregar ratio
+
+
+# CONCLUSION
+
+- suma total de las comisiones bancarias.
+- Tendencias.  Trend factor is commonly used in financial institution to determine the volatility of an asset with respect to underlying market.
+- Trimestre: agregar trimestre foto mes.
+- Our preliminary results indicate that “number of savings products” and “total sum of fees” are the most influential churn predictors. Customers with more savings products tend to stay, those who are charged with high fees tend to leave. This information can help banks to build an alert system to monitor these two features, alarming them which customers are likely to leave soon.
+

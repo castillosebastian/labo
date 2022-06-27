@@ -19,3 +19,10 @@ cliente_continua = paquete_premium_202011$numero_de_cliente[paquete_premium_2020
 
 fotomescliente = paquete_premium_202011 %>% filter(numero_de_cliente == 60888266)
 fotomeses <- t(fotomescliente) %>% as.data.frame() %>% setNames(fotomescliente[,1])
+
+paquete_premium_202011 %>% 
+  filter(ctrx_quarter < 50) %>% 
+  ggplot(aes(x=as.factor(clase_ternaria), y=ctrx_quarter, color=as.factor(clase_ternaria))) + 
+  geom_boxplot() 
+  
+  
