@@ -341,15 +341,15 @@ AgregarVariables  <- function( dataset )
   dataset[ , total_comisiones := sum(mcomisiones, na.rm = T), by = numero_de_cliente][]
   dataset[ , ctotal_comisiones := rowSums( cbind( ccomisiones_mantenimiento, ccomisiones_otras), na.rm=TRUE ) ]
   dataset[ , ratio_comisiones :=  mcomisiones  / ctotal_comisiones  ]
-  dataset[ , ratio_totalcomisiones_antiguedad  := total_comisiones / cliente_antiguedad ]
+  dataset[ , ratio_totalcomisiones_antiguedad  := total_comisiones / cliente_antiguedad ] # top 13
   dataset[ , ratio_totalcomisiones_ctrx  := total_comisiones / ctrx_quarter_normalizado ]
-  dataset[ , exp_totalcomisiones := total_comisiones ^ 2 ]
+  dataset[ , exp_totalcomisiones := total_comisiones ^ 2 ] # top 19
   dataset[ , log_totalcomisiones := log(total_comisiones)]
   
   # Suma deuda x prestamos
   # mprestamos_personales + mprestamos_prendarios + mprestamos_hipotecarios  = monto total de 
   # deuda restante de todos los prestamos personales del cliente
-  dataset[ , total_deuda_acumulada := rowSums( cbind( mprestamos_personales, mprestamos_prendarios, mprestamos_hipotecarios), na.rm=TRUE ) ]
+  dataset[ , total_deuda_acumulada := rowSums( cbind( mprestamos_personales, mprestamos_prendarios, mprestamos_hipotecarios), na.rm=TRUE ) ] #top 11
   dataset[ , ratio_deuda_acumulada_antiguedad  := total_deuda_acumulada / cliente_antiguedad ]
   dataset[ , ratio_deuda_acumulada_cproductos_sobre_ctrx_q  := total_deuda_acumulada / ctrx_quarter_normalizado ]
   
@@ -402,7 +402,7 @@ AgregarVariables  <- function( dataset )
   dataset[ , mrentabilidad_annual_por_ctrx_q  :=  mrentabilidad_annual* ctrx_quarter_normalizado ]
   dataset[ , mcomisiones_por_ctrx_q  := mcomisiones * ctrx_quarter_normalizado ]
   dataset[ , mactivos_margen_por_ctrx_q  :=  mactivos_margen* ctrx_quarter_normalizado ]
-  dataset[ , mpasivos_margen_por_ctrx_q  := mpasivos_margen * ctrx_quarter_normalizado ]
+  dataset[ , mpasivos_margen_por_ctrx_q  := mpasivos_margen * ctrx_quarter_normalizado ] # top 2
   
   # Más sobre rentabilidad
   dataset[ , mrentabilidad_exp  := mrentabilidad ^ 2]

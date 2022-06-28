@@ -19,7 +19,7 @@ experiment:
 
 param:
   algoritmo:  "lightgbm"
-  semilla: 102191
+  semilla: 777781
 
   crossvalidation: FALSE              #Esta en FALSE, no se va a hacer ningun cross validation
   crossvalidation_folds: 5
@@ -36,8 +36,8 @@ param:
 
     learning_rate:      [ 0.02, 0.3 ]
     feature_fraction:   [ 0.1, 1.0 ]
-    num_leaves:         [ 16, 1024, "integer" ]
-    min_data_in_leaf:   [  1, 8000, "integer" ]
+    num_leaves:         [ 16, 3024, "integer" ]
+    min_data_in_leaf:   [  1, 50000, "integer" ]
 
     lambda_l1:  0                    # [ 0  ,  10 ]
     lambda_l2:  0                    # [ 0  , 200 ]
@@ -50,7 +50,7 @@ param:
     max_depth:  -1                   # [ 6  ,  12 ]  #pero es preferible dejarlo en -1 como esta
     max_bin:     31                  #dejarlo fijo en 31, los scripts no estan preparados para que esto cambie
     
-    seed: 999983                     #podrian poner su propia semilla, asi sienten que la corrida les pertenece
+    seed: 777781                     #podrian poner su propia semilla, asi sienten que la corrida les pertenece
     extra_trees: FALSE
 
     drop_rate: 0.1                   # [ 0.03,   1.0]  solo cuando  boosting: dart
