@@ -10,9 +10,14 @@ filenames <- list.files(pattern="impo_*", recursive = T)
 tbl <- do.call(rbind, 
                lapply(filenames, function(x) 
                  cbind(fread(x, stringsAsFactors = FALSE), filename = x)))
+
 tbl = tbl %>% 
-  mutate(experimento = str_sub(filename, 1, 7),
-         top_modelos = as.integer(str_sub(filename, 14,15))) 
+  group_by(filename) %>% 
+  mutate(pos = row_number())
+
+# tbl = tbl %>% 
+#   mutate(experimento = str_sub(filename, 1, 7),
+#          top_modelos = as.integer(str_sub(filename, 14,15))) 
         
 features_summary <- tbl %>% 
   group_by(Feature) %>% 
@@ -31,4 +36,3 @@ features_summary %>%
   ggplot2::ggplot(aes(y=ganancia_media, x=posicion_promedio, label=Feature)) +
   geom_point() + 
   ggrepel::geom_label_repel()
-  
