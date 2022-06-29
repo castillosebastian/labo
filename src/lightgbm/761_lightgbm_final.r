@@ -18,7 +18,7 @@ require("lightgbm")
 setwd("~/buckets/b1/")   #Establezco el Working Directory
 
 
-kprefijo       <- "KA741"
+kprefijo       <- "KA761"
 ksemilla_azar  <- 777859  #Aqui poner la propia semilla
 kdataset       <- "./datasets/paquete_premium_ext_721.csv.gz"
 
