@@ -42,7 +42,7 @@ dataset  <- na.roughfix( dataset )
 
 
 #los campos que arbitrariamente decido considerar para el clustering
-
+setwd( "~/buckets/b1/exp/8101FEa/" )  
 filenames <- list.files(pattern="impo_*", recursive = T)
 
 tbl <- do.call(rbind, 

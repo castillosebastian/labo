@@ -6,7 +6,7 @@ library(forcats)
 
 # data_dir = setwd("~/R/labo/exp/archivo")
 # setwd("~/buckets/b1/exp/8101HTa")
-# setwd("~/R/labo/exp/impofiles")
+ setwd("~/R/labo/exp/impofiles")
 
 filenames <- list.files(pattern="impo_*", recursive = T)
 
