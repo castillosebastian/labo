@@ -1,0 +1,40 @@
+Plan de experimentacion:
+
+HT
+1. trabajar con
+    Variables manueales
+    Lags Deltas
+    Tendencias, promedios, min..
+    Rankings
+    DumiesNA
+    FE a partir de RandomForest
+
+TS
+1. Si tengo buenos resultados en 202001 y 202002, puedo asumir que entrenar en ambos meses es bueno tambièn? SI.
+2. Valido en octubre y testeo en noviembre: OK_Denicolay
+
+SEMILLERO
+1. semillas 80/100
+
+VARIABLESDRIF
+"internet", "tmobile_app": OK_Denicolay
+
+NECESITO:
+1.Registro de ganancias por modelo.
+
+SOLUCION:
+Para elgir el modelo debe hacerse la evaluación de cuáles son los modelos sistemáticamente de mejor ganancia: "con lo cual, vas a ir orientando tus modelos a algo que te deje tranquilo, que sera algo que vos veas que te da bien en el Public y en la BO_log.txt , ambos buenos al mismo tiempo" OK_Denicolay. Subir entrega de 10.5/11 . Cuando en el público sube y en privado baja. 
+
+VIDEO:
+Contar dicisiones, qué funcionó y que no funcionó. 
+Presi.
+
+
+Plan de experimentacino---------------------------------------------------
+TS: 8220 ¿cual meses son mejores para entrenar?
+
+
+
+
+
+

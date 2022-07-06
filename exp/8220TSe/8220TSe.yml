@@ -1,7 +1,5 @@
-#sin eliminar 202006, me banco todos los datos rotos
-
 googlecloud:
-  RAM:   256
+  RAM:   128
   vCPU:    8
   disk:  300
 
@@ -11,10 +9,8 @@ experiment:
   restart: FALSE
   name: "exp"
   type: "TrainingStrategy"
-  tags: [ "primero" ]
-  description: "El primer TS"
-
-  requires: [ "8101FEa" ]
+  tags: [ "austero" ]
+  requires: [ "8220FEa" ]
 
 
 param:
@@ -33,18 +29,18 @@ param:
   train:
     periodos: [ ]
     rango:
-      desde:  202001
-      hasta:  202009
-    excluir:  [ 202006 ]
+      desde:  202005
+      hasta:  202006
+    excluir: [ 202006 ]
     undersampling: [ ]  #ATENCION  sin undersampling
 
   #donde valido
   validate:
-    periodos: [ 202011 ] # VAlidar en octubre, mejora
+    periodos: [ 202010 ]
     rango:
       desde:  
       hasta:  
-    excluir:  [ ]
+    excluir: [ ]
     undersampling: [  ]
 
   #donde testeo
@@ -53,7 +49,7 @@ param:
     rango:
       desde:  
       hasta:  
-    excluir:  [  ]
+    excluir: [  ]
     undersampling: [  ]
 
   #donde entreno el modelo final
@@ -62,7 +58,7 @@ param:
     rango:
       desde:  202001
       hasta:  202011
-    excluir:  [ 202006 ]
+    excluir: [ 202006 ]
     undersampling: [  ]
     
 
@@ -70,16 +66,16 @@ param:
     input:
       dentrada: [ "dataset" ]
     output:
-      future_data:    "TS_future_data.csv.gz"
+      future_data:   "TS_future_data.csv.gz"
       train_strategy: "TS_train_strategy.csv.gz"
-      train_final:    "TS_train_final.csv.gz"
-      control:        "control.txt"
+      train_final:   "TS_train_final.csv.gz"
+      control:       "control.txt"
 
   const:
-    secciones:    [ "future", "train", "validate", "test", "train_final"  ]
-    clase:        "clase_ternaria"
-    periodo:      "foto_mes"
-    futuro:       [ 202101 ]
+    secciones: [ "future", "train", "validate", "test", "train_final"  ]
+    clase: "clase_ternaria"
+    periodo: "foto_mes"
+    futuro: [ 202101 ]
     campos_sort:  [ "numero_de_cliente", "foto_mes" ]   #por donde hago el sort inicial
 
 
