@@ -53,7 +53,7 @@ param:
 
   rankeador: FALSE
 
-  canaritos_final: 0.0   #si es CERO entonces no hace el filtrado final por canaritos
+  canaritos_final: 0.2   #si es CERO entonces no hace el filtrado final por canaritos
 
   files:
     input:
