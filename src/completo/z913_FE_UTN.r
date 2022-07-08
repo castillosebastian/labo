@@ -333,6 +333,79 @@ AgregarVariables  <- function( dataset )
   dataset[ , mvr_mpagominimo         := mv_mpagominimo  / mv_mlimitecompra ]
 
   #Aqui debe usted agregar sus propias nuevas variables
+  
+  # Suma total de comisiones bancarias
+  dataset[ , total_comisiones := sum(mcomisiones, na.rm = T), by = numero_de_cliente][]
+  dataset[ , ctotal_comisiones := rowSums( cbind( ccomisiones_mantenimiento, ccomisiones_otras), na.rm=TRUE ) ]
+  dataset[ , ratio_comisiones :=  mcomisiones  / ctotal_comisiones  ]
+  dataset[ , ratio_totalcomisiones_antiguedad  := total_comisiones / cliente_antiguedad ] # top 13
+  dataset[ , ratio_totalcomisiones_ctrx  := total_comisiones / ctrx_quarter_normalizado ]
+  dataset[ , exp_totalcomisiones := total_comisiones ^ 2 ] # top 19
+  dataset[ , log_totalcomisiones := log(total_comisiones)]
+  
+  # Suma deuda x prestamos
+  # mprestamos_personales + mprestamos_prendarios + mprestamos_hipotecarios  = monto total de 
+  # deuda restante de todos los prestamos personales del cliente
+  dataset[ , total_deuda_acumulada := rowSums( cbind( mprestamos_personales, mprestamos_prendarios, mprestamos_hipotecarios), na.rm=TRUE ) ] #top 11
+  dataset[ , ratio_deuda_acumulada_antiguedad  := total_deuda_acumulada / cliente_antiguedad ]
+  dataset[ , ratio_deuda_acumulada_cproductos_sobre_ctrx_q  := total_deuda_acumulada / ctrx_quarter_normalizado ]
+  
+  # ahorro
+  dataset[ , total_mcaja_ahorro := sum(mcaja_ahorro, na.rm = T), by = numero_de_cliente][]
+  dataset[ , ratio_total_mcaja_ahorro_antiguedad  := total_mcaja_ahorro / cliente_antiguedad ]
+  dataset[ , ratio_total_mcaja_ahorro_ctrx_q := total_mcaja_ahorro / ctrx_quarter_normalizado ]
+  
+  # Ver valor monetario normalizado 
+  # Aplanar variables ej. movimientos-saldos => vairable sobre cuánto entró, cuando salio, 
+  
+  # Cantidad de productos / edad
+  dataset[ , cproductos_sobre_edad  := cproductos / cliente_edad ]
+  dataset[ , cproductos_sobre_antiguedad  := cproductos / cliente_antiguedad ]
+  dataset[ , cproductos_sobre_ctrx_q  := cproductos / ctrx_quarter_normalizado ]
+  
+  # Variable de Retabilidad SOBRE edad, antiguedad y ctrx
+  dataset[ , mrentabilidad_sobre_edad  := mrentabilidad / cliente_edad ]
+  dataset[ , mrentabilidad_annual_sobre_edad  :=  mrentabilidad_annual/ cliente_edad ]
+  dataset[ , mcomisiones_sobre_edad  := mcomisiones / cliente_edad ]
+  dataset[ , mactivos_margen_sobre_edad  :=  mactivos_margen/ cliente_edad ]
+  dataset[ , mpasivos_margen_sobre_edad  := mpasivos_margen / cliente_edad ]
+  
+  dataset[ , mrentabilidad_sobre_antiguedad  := mrentabilidad / cliente_antiguedad ]
+  dataset[ , mrentabilidad_annual_sobre_antiguedad  :=  mrentabilidad_annual/ cliente_antiguedad ]
+  dataset[ , mcomisiones_sobre_antiguedad  := mcomisiones / cliente_antiguedad ]
+  dataset[ , mactivos_margen_sobre_antiguedad  :=  mactivos_margen/ cliente_antiguedad ]
+  dataset[ , mpasivos_margen_sobre_antiguedad  := mpasivos_margen / cliente_antiguedad ]
+  
+  dataset[ , mrentabilidad_sobre_ctrx_q  := mrentabilidad / ctrx_quarter_normalizado ]
+  dataset[ , mrentabilidad_annual_sobre_ctrx_q  :=  mrentabilidad_annual/ ctrx_quarter_normalizado ]
+  dataset[ , mcomisiones_sobre_ctrx_q  := mcomisiones / ctrx_quarter_normalizado ]
+  dataset[ , mactivos_margen_sobre_ctrx_q  :=  mactivos_margen/ ctrx_quarter_normalizado ]
+  dataset[ , mpasivos_margen_sobre_ctrx_q  := mpasivos_margen / ctrx_quarter_normalizado ]
+  
+  # Variable de Retabilidad POR edad
+  dataset[ , mrentabilidad_por_edad  := mrentabilidad * cliente_edad ]
+  dataset[ , mrentabilidad_annual_por_edad  :=  mrentabilidad_annual* cliente_edad ]
+  dataset[ , mcomisiones_por_edad  := mcomisiones * cliente_edad ]
+  dataset[ , mactivos_margen_por_edad  :=  mactivos_margen* cliente_edad ]
+  dataset[ , mpasivos_margen_por_edad  := mpasivos_margen * cliente_edad ]
+  
+  dataset[ , mrentabilidad_por_antiguedad  := mrentabilidad * cliente_antiguedad ]
+  dataset[ , mrentabilidad_annual_por_antiguedad  :=  mrentabilidad_annual* cliente_antiguedad ]
+  dataset[ , mcomisiones_por_antiguedad  := mcomisiones * cliente_antiguedad ]
+  dataset[ , mactivos_margen_por_antiguedad  :=  mactivos_margen* cliente_antiguedad ]
+  dataset[ , mpasivos_margen_por_antiguedad  := mpasivos_margen * cliente_antiguedad ]
+  
+  dataset[ , mrentabilidad_por_ctrx_q  := mrentabilidad * ctrx_quarter_normalizado ]
+  dataset[ , mrentabilidad_annual_por_ctrx_q  :=  mrentabilidad_annual* ctrx_quarter_normalizado ]
+  dataset[ , mcomisiones_por_ctrx_q  := mcomisiones * ctrx_quarter_normalizado ]
+  dataset[ , mactivos_margen_por_ctrx_q  :=  mactivos_margen* ctrx_quarter_normalizado ]
+  dataset[ , mpasivos_margen_por_ctrx_q  := mpasivos_margen * ctrx_quarter_normalizado ] # top 2
+  
+  # Más sobre rentabilidad
+  dataset[ , mrentabilidad_exp  := mrentabilidad ^ 2]
+  dataset[ , mrentabilidad_annual_exp  :=  mrentabilidad_annual ^ 2 ]
+  dataset[ , mrentabilidad_exp  := log(mrentabilidad )]
+  dataset[ , mrentabilidad_annual_exp  := log(mrentabilidad_annual) ]
 
   #valvula de seguridad para evitar valores infinitos
   #paso los infinitos a NULOS

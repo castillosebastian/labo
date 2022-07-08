@@ -1,5 +1,19 @@
 Plan de experimentacion:
 
+Ronda Principal 1: Máxima complejidad
+    
+Empezar un experimento con un data set de grandes dimensiones e ir reduciendo.
+El ajuste deberìa ser por las variables de máxima ganancia.
+
+
+Ronda Secundaria 2: Probar Excluyendo mese enero, febrero y mayo, e incluir junio.
+
+
+
+FE: 
+tendenciaYmuchomas: activar todo 3,5
+
+
 HT
 1. trabajar con
     Variables manueales
