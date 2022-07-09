@@ -841,6 +841,7 @@ if( PARAM$rankeador ) #agrego los rankings
 {
   if( PARAM$acumulavars )  cols_lagueables  <- setdiff( colnames(dataset), PARAM$const$campos_fijos )
 
+  cols_lagueables  <- intersect( colnames(dataset), cols_lagueables )
   setorderv( dataset, PARAM$const$campos_rsort )
   Rankeador( cols_lagueables )
   setorderv( dataset, PARAM$const$campos_sort )
