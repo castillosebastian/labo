@@ -404,8 +404,6 @@ AgregarVariables  <- function( dataset )
   # Más sobre rentabilidad
   dataset[ , mrentabilidad_exp  := mrentabilidad ^ 2]
   dataset[ , mrentabilidad_annual_exp  :=  mrentabilidad_annual ^ 2 ]
-  dataset[ , mrentabilidad_exp  := log(mrentabilidad )]
-  dataset[ , mrentabilidad_annual_exp  := log(mrentabilidad_annual) ]
 
   #valvula de seguridad para evitar valores infinitos
   #paso los infinitos a NULOS

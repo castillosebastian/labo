@@ -1,12 +1,23 @@
 Plan de experimentacion:
 
-Ronda Principal 1: Máxima complejidad
+Ronda 0: 
+        Con lag1 y tendenciaYmuchomas activo pleno en 3 y 6, mas tendencia 9 12
+        TS anual+excluidos:202001, 202002, 202005, 202006, 
+        NO FUNCIONO
+        
+8000:
+        Scripts por defecto.
+
+8320: Máxima complejidad
     
-Empezar un experimento con un data set de grandes dimensiones e ir reduciendo.
-El ajuste deberìa ser por las variables de máxima ganancia.
+    Empezar un experimento con un data set de grandes dimensiones e ir reduciendo.
+    El ajuste deberìa ser por las variables de máxima ganancia.
 
 
-Ronda Secundaria 2: Probar Excluyendo mese enero, febrero y mayo, e incluir junio.
+8220: Probar Excluyendo mese enero, febrero y mayo, e incluir junio.
+
+
+
 
 
 

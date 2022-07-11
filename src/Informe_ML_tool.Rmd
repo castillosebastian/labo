@@ -1,0 +1,127 @@
+---
+title: 'Informe sobre MLOps'
+author: "Claudio Sebastián Castillo"
+date: "`r format(Sys.Date(), '%d de %B de %Y') `"
+output:
+  pdf_document: 
+    number_sections: true
+    toc: true 
+    toc_depth: 3  
+linestretch: 1
+params:
+  AnalisisIntegrador: FALSE
+  primera_parte: FALSE
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
+knitr::opts_chunk$set(fig.align = 'center')
+source("Unidad0_repos_and_tools.R")
+```
+
+```{r, params}
+AI = params$AnalisisIntegrador
+primera_parte = params$primera_parte
+
+set.seed(1234)
+```
+
+```{r, tools}
+
+```
+
+# Primera Parte 
+
+## Desarrollo de modelos 
+
+### Parametros del mejor modelo de prueba en Public sin BO
+
+```{r, eval= (primera_parte | AI)}
+
+kdataset       <- "./datasets/paquete_premium_ext_721.csv.gz"
+#donde entrenar
+kfinal_mes_desde    <- 201912        #mes desde donde entreno
+kfinal_mes_hasta    <- 202011        #mes hasta donde entreno, inclusive
+kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
+#hiperparametros de LightGBM
+#aqui copiar a mano lo menor de la Bayesian Optimization
+# si es de IT y le gusta automatizar todo, no proteste, ya llegara con MLOps
+kmax_bin           <-    31
+klearning_rate     <-     0.0131094708
+knum_iterations    <-   951
+knum_leaves        <-  1002
+kmin_data_in_leaf  <- 16918
+kfeature_fraction  <-     0.5609450635
+
+```
+
+### Modelos, gananciaBO, gananciaPublic, etc
+
+
+```{r}
+#----
+setwd("~/R/labo/exp/8120HTa/")
+filenames <- list.files(pattern="*.csv")
+tbl <- do.call(rbind, lapply(filenames, function(x) cbind(fread(x, stringsAsFactors = FALSE), filename = x))) 
+tbl = tbl %>% mutate(filename = str_replace_all(filename, "\\.csv", ''))
+  
+tbl$gananciaPublic[str_detect(tbl$filename, "seba")] = 21.74459
+ganancia = tbl
+#----
+df = fread("~/R/labo/exp/8320HTa/8320HTa.csv") %>% 
+  mutate(filename = "8320HTa", gananciaPublic = 18.79964)
+ganancia = bind_rows(ganancia, df)
+#------
+# Entrenados en un mes
+df1 = fread("~/R/labo/exp/8220HTi/8220HTi.csv") %>% 
+  mutate(filename = "8220HTi", gananciaPublic = 21.38960)
+df2 = fread("~/R/labo/exp/8220HTh/8220HTh.csv") %>% 
+  mutate(filename = "8220HTh", gananciaPublic = 20.28962)
+df3 = fread("~/R/labo/exp/8220HTg/8220HTg.csv") %>% 
+  mutate(filename = "8220HTg", gananciaPublic = 21.26960)
+df4 = fread("~/R/labo/exp/8220HTf/8220HTf.csv") %>% 
+  mutate(filename = "8220HTf", gananciaPublic = 21.46459)
+df5 = fread("~/R/labo/exp/8220HTe/8220HTe.csv") %>% 
+  mutate(filename = "8220HTe", gananciaPublic = 21.49459)
+df6 = fread("~/R/labo/exp/8220HTd/8220HTd.csv") %>% 
+  mutate(filename = "8220HTd", gananciaPublic = 19.97462)
+
+ganancia = bind_rows(ganancia, df1, df2, df3, df4, df5, df6)
+
+
+ganancia %>% 
+  group_by(filename) %>% 
+  arrange(desc(ganancia)) %>% 
+  slice(1:15) %>% 
+  #ggplot(aes(x= reorder(filename, gananciaPublic) , y=ganancia/1000000, color = gananciaPublic)) +
+  ggplot(aes(x= filename, y=ganancia/1000000, color = gananciaPublic)) + 
+  geom_point() +
+  scale_colour_viridis_c() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 14)) +
+  labs(title = "Modelos según Ganancia en entrenamiento y Tablero Público",  
+       x ="modelos", y = "ganancia entrenamiento (millones)")
+
+```
+
+
+```{r}
+setwd("~/R/labo/exp/")
+filenames <- list.files(pattern="*.yml", recursive = T)
+ymls <- do.call(rbind, lapply(filenames, function(x) cbind(read_yaml(x), filename = x))) 
+param_groups = rownames(ymls)
+ymls = as.tibble(ymls) %>% mutate(param_groups = param_groups)
+
+```
+
+
+
+
+\pagebreak
+# Documento e Información de Sesion
+
+Este documento fue generado a partir de un documento **RMarkdown** parametrizable que se entrega con su correspondiente output en pdf. Para conrroborar la originalidad y autoría del documento .Rmd se pone a disposición (bajo requerimiento) de la fecha de ceación e hitórico de cambios alojado en la cuenta personal del suscripto castillosebastian@github.com.    
+
+```{r}
+sessionInfo()
+```
+
