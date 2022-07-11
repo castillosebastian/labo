@@ -68,7 +68,7 @@ param:
 
   #Optimizacion Bayesiana
   BO:
-    iterations:  1000                  #cantidad de iteraciones
+    iterations:  100                 #cantidad de iteraciones
 
     noisy: TRUE
     minimize: FALSE
