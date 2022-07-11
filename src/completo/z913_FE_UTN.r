@@ -341,7 +341,6 @@ AgregarVariables  <- function( dataset )
   dataset[ , ratio_totalcomisiones_antiguedad  := total_comisiones / cliente_antiguedad ] # top 13
   dataset[ , ratio_totalcomisiones_ctrx  := total_comisiones / ctrx_quarter_normalizado ]
   dataset[ , exp_totalcomisiones := total_comisiones ^ 2 ] # top 19
-  dataset[ , log_totalcomisiones := log(total_comisiones)]
   
   # Suma deuda x prestamos
   # mprestamos_personales + mprestamos_prendarios + mprestamos_hipotecarios  = monto total de 
