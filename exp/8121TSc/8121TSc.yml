@@ -29,7 +29,7 @@ param:
   train:
     periodos: [ ]
     rango:
-      desde:  202001
+      desde:  201912 
       hasta:  202009
     excluir: [ 202006 ]
     undersampling: [{clase: "CONTINUA", prob: 0.1 } ]  #ATENCION  sin undersampling
@@ -56,7 +56,7 @@ param:
   train_final:
     periodos: [ ]
     rango:
-      desde:  202001
+      desde:  201912 
       hasta:  202011
     excluir: [ 202006 ]
     undersampling: [  ]
