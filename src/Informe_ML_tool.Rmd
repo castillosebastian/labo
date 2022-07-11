@@ -1,22 +1,27 @@
 ---
-title: 'Informe sobre MLOps'
+title: "Informe sobre MLOps"
 author: "Claudio Sebastián Castillo"
 date: "`r format(Sys.Date(), '%d de %B de %Y') `"
 output:
-  pdf_document: 
-    number_sections: true
-    toc: true 
-    toc_depth: 3  
+  html_document:
+    toc: yes
+    toc_depth: '3'
+    df_print: paged
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
 linestretch: 1
 params:
-  AnalisisIntegrador: FALSE
-  primera_parte: FALSE
+  AnalisisIntegrador: no
+  primera_parte: no
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
 knitr::opts_chunk$set(fig.align = 'center')
 source("Unidad0_repos_and_tools.R")
+library(yaml)
 ```
 
 ```{r, params}
@@ -30,11 +35,6 @@ set.seed(1234)
 
 ```
 
-# Primera Parte 
-
-## Desarrollo de modelos 
-
-### Parametros del mejor modelo de prueba en Public sin BO
 
 ```{r, eval= (primera_parte | AI)}
 
@@ -55,10 +55,9 @@ kfeature_fraction  <-     0.5609450635
 
 ```
 
-### Modelos, gananciaBO, gananciaPublic, etc
+# Modelos, gananciaBO, gananciaPublic
 
-
-```{r}
+```{r, fig.height=8, fig.width=12}
 #----
 setwd("~/R/labo/exp/8120HTa/")
 filenames <- list.files(pattern="*.csv")
@@ -85,11 +84,16 @@ df5 = fread("~/R/labo/exp/8220HTe/8220HTe.csv") %>%
   mutate(filename = "8220HTe", gananciaPublic = 21.49459)
 df6 = fread("~/R/labo/exp/8220HTd/8220HTd.csv") %>% 
   mutate(filename = "8220HTd", gananciaPublic = 19.97462)
-
 ganancia = bind_rows(ganancia, df1, df2, df3, df4, df5, df6)
+#-------
+# Entrenando con 
+df = fread("~/R/labo/exp/8000HTa/8000HTa.csv") %>% 
+  mutate(filename = "8000HTa", gananciaPublic = 19.43963)
+ganancia = bind_rows(ganancia, df)
 
+#----------------------
 
-ganancia %>% 
+ganancia_G = ganancia %>% 
   group_by(filename) %>% 
   arrange(desc(ganancia)) %>% 
   slice(1:15) %>% 
@@ -99,10 +103,11 @@ ganancia %>%
   scale_colour_viridis_c() +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 14)) +
   labs(title = "Modelos según Ganancia en entrenamiento y Tablero Público",  
-       x ="modelos", y = "ganancia entrenamiento (millones)")
+       x ="", y = "ganancia entrenamiento (millones)")
 
+plotly::ggplotly(ganancia_G)
 ```
-
+# Parametros
 
 ```{r}
 setwd("~/R/labo/exp/")
@@ -111,17 +116,28 @@ ymls <- do.call(rbind, lapply(filenames, function(x) cbind(read_yaml(x), filenam
 param_groups = rownames(ymls)
 ymls = as.tibble(ymls) %>% mutate(param_groups = param_groups)
 
-```
+df = ymls
+df <- df %>%  filter(param_groups == "param") 
 
+nexp = length(df$param_groups)
+df_total = data.frame()
 
+for(i in 1:nexp){
+  
+  tb = unlist(df$V1[i])
+  tb = tibble(parametros =  names(tb), valores = as.character(tb))
+  tb = tb %>% mutate(descartarF = str_detect(valores, "FALSE|0"))
+  tb = tb %>% filter(!descartarF) %>% 
+    mutate(experimento = df$filename[i]) %>% 
+    select(-descartarF)
+  
+  df_total <- rbind(df_total, tb)
 
+}
 
-\pagebreak
-# Documento e Información de Sesion
+DT::datatable(df_total, class = "cell-border stripe", rownames = FALSE, filter ="top", 
+              editable =TRUE, extension = "Buttons", 
+              options = list(dom="Bfrtip",  buttons =c("copy", "csv", "excel", "pdf","print")))
 
-Este documento fue generado a partir de un documento **RMarkdown** parametrizable que se entrega con su correspondiente output en pdf. Para conrroborar la originalidad y autoría del documento .Rmd se pone a disposición (bajo requerimiento) de la fecha de ceación e hitórico de cambios alojado en la cuenta personal del suscripto castillosebastian@github.com.    
-
-```{r}
-sessionInfo()
 ```
 
