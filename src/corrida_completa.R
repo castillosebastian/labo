@@ -1,5 +1,8 @@
 # corrida completa
-exp_start( "8---FEa",  deletevm= FALSE)
-exp_start( "8---TSa",  deletevm= FALSE)
-exp_start( "8---HTa",  deletevm= FALSE)
-exp_start( "8---ZZa")
+exp_start( "8121TSb",  deletevm= FALSE)
+exp_start( "8121HTb",  deletevm= FALSE)
+exp_start( "8121ZZb")
+# Corrida completa
+exp_start( "8121TSc",  deletevm= FALSE)
+exp_start( "8121HTc",  deletevm= FALSE)
+exp_start( "8121ZZc")
