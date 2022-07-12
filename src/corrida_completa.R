@@ -1,8 +1,13 @@
+source("~/labo/src/lib/exp_lib.r")
 # corrida completa
 # exp_start( "8121TSb",  deletevm= FALSE)
 # exp_start( "8121HTb",  deletevm= FALSE)
 # exp_start( "8121ZZb")
 # Corrida completa
-exp_start( "8121TSc",  deletevm= FALSE)
-exp_start( "8121HTc",  deletevm= FALSE)
-exp_start( "8121ZZc")
+# exp_start( "8121TSc",  deletevm= FALSE)
+# exp_start( "8121HTc",  deletevm= FALSE)
+# exp_start( "8121ZZc")
+exp_start( "8122FEa",  deletevm= FALSE)
+exp_start( "8122TSa",  deletevm= FALSE)
+exp_start( "8122HTa",  deletevm= FALSE)
+exp_start( "8122ZZa")
