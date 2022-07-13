@@ -10,7 +10,7 @@ experiment:
   name: "exp"
   type: "TrainingStrategy"
   tags: [ "austero" ]
-  requires: [ "8121FEa" ]
+  requires: [ "8122FEa" ]
 
 
 param:
