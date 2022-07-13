@@ -6,9 +6,9 @@ library(forcats)
 
 # data_dir = setwd("~/R/labo/exp/archivo")
 # setwd("~/buckets/b1/exp/8101HTa")
- setwd("~/R/labo/exp/impofiles")
+setwd("~/R/labo/exp/impofiles")
 
-filenames <- list.files(pattern="impo_*", recursive = T)
+filenames <- list.files(pattern="impo_*")
 
 tbl <- do.call(rbind, 
                lapply(filenames, function(x) 
@@ -23,6 +23,10 @@ tbl <- do.call(rbind,
 #   ggrepel::geom_label_repel(aes(label = Feature)) +
 #   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
 #         legend.position = "none") 
+
+tbl = tbl %>% 
+  group_by(filename) %>% 
+  mutate(pos = row_number())
 
 nfeatures = 35
 
