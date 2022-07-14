@@ -20,44 +20,24 @@ params:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
 knitr::opts_chunk$set(fig.align = 'center')
+options(DT.options = list(pageLength = 35, language = list(search = 'Filter:')))
 source("Unidad0_repos_and_tools.R")
 library(yaml)
+library(DT)
+library(forcats)
 ```
 
 ```{r, params}
 AI = params$AnalisisIntegrador
 primera_parte = params$primera_parte
 
+primera_parte = T
 set.seed(1234)
-```
-
-```{r, tools}
-
-```
-
-
-```{r, eval= (primera_parte | AI)}
-
-kdataset       <- "./datasets/paquete_premium_ext_721.csv.gz"
-#donde entrenar
-kfinal_mes_desde    <- 201912        #mes desde donde entreno
-kfinal_mes_hasta    <- 202011        #mes hasta donde entreno, inclusive
-kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento
-#hiperparametros de LightGBM
-#aqui copiar a mano lo menor de la Bayesian Optimization
-# si es de IT y le gusta automatizar todo, no proteste, ya llegara con MLOps
-kmax_bin           <-    31
-klearning_rate     <-     0.0131094708
-knum_iterations    <-   951
-knum_leaves        <-  1002
-kmin_data_in_leaf  <- 16918
-kfeature_fraction  <-     0.5609450635
-
 ```
 
 # Modelos, gananciaBO, gananciaPublic
 
-```{r, fig.height=8, fig.width=12}
+```{r,eval= (primera_parte | AI), fig.height=8, fig.width=14}
 #----
 setwd("~/R/labo/exp/8120HTa/")
 filenames <- list.files(pattern="*.csv")
@@ -90,13 +70,46 @@ ganancia = bind_rows(ganancia, df1, df2, df3, df4, df5, df6)
 df = fread("~/R/labo/exp/8000HTa/8000HTa.csv") %>% 
   mutate(filename = "8000HTa", gananciaPublic = 19.43963)
 ganancia = bind_rows(ganancia, df)
+# Entrenando -------
+df = fread("~/R/labo/exp/8121HTa/8121HTa.csv") %>% 
+  mutate(filename = "8121HTa", gananciaPublic = 17.86466)
+ganancia = bind_rows(ganancia, df)
+# Entrenando -------
+df = fread("~/R/labo/exp/8121HTc/8121HTc.csv") %>% 
+  mutate(filename = "8121HTc", gananciaPublic = 19.35463)
+ganancia = bind_rows(ganancia, df)
+# Entrenando -------
+df = fread("~/R/labo/exp/8121HTb/8121HTb.csv") %>% 
+  mutate(filename = "8121HTb", gananciaPublic = 19.40963)
+ganancia = bind_rows(ganancia, df)
+# Entrenando -------
+df = fread("~/R/labo/exp/8122HTa/8122HTa.csv") %>% 
+  mutate(filename = "8122HTa", gananciaPublic = 20.56961)
+ganancia = bind_rows(ganancia, df)
+
+
+
+
+# Hibridaciones
+gan_8131 = ganancia %>% filter(str_detect(filename, "8121HTb|8122HTa")) %>% 
+  group_by(filename) %>% 
+  arrange(desc(ganancia)) %>%
+  slice(1:10) %>%  ungroup() %>% 
+  dplyr::select(ganancia) %>% 
+  summarise_all(median) 
+
+temp = tribble(
+  ~filename, ~ganancia, ~gananciaPublic,  
+  "8131HBc_8121ZZb+81221ZZa", gan_8131$ganancia, 21.10960,  
+)
+
+
 
 #----------------------
-
 ganancia_G = ganancia %>% 
   group_by(filename) %>% 
   arrange(desc(ganancia)) %>% 
-  slice(1:15) %>% 
+  slice(1:15) %>% bind_rows(temp) %>%
   #ggplot(aes(x= reorder(filename, gananciaPublic) , y=ganancia/1000000, color = gananciaPublic)) +
   ggplot(aes(x= filename, y=ganancia/1000000, color = gananciaPublic)) + 
   geom_point() +
@@ -107,9 +120,9 @@ ganancia_G = ganancia %>%
 
 plotly::ggplotly(ganancia_G)
 ```
-# Parametros
+# Tabla para revisión de parámetros de experiementos corridos (parcial)
 
-```{r}
+```{r, eval= (primera_parte | AI)}
 setwd("~/R/labo/exp/")
 filenames <- list.files(pattern="*.yml", recursive = T)
 ymls <- do.call(rbind, lapply(filenames, function(x) cbind(read_yaml(x), filename = x))) 
@@ -136,8 +149,115 @@ for(i in 1:nexp){
 }
 
 DT::datatable(df_total, class = "cell-border stripe", rownames = FALSE, filter ="top", 
-              editable =TRUE, extension = "Buttons", 
+              editable =TRUE, extension = "Buttons", fillContainer = FALSE,
               options = list(dom="Bfrtip",  buttons =c("copy", "csv", "excel", "pdf","print")))
 
 ```
 
+# Revisión de features
+
+```{r, fig.height=8, fig.width=14}
+setwd("~/R/labo/exp/impofiles")
+
+filenames <- list.files(pattern="impo_*")
+
+tbl <- do.call(rbind, 
+               lapply(filenames, function(x) 
+                 cbind(fread(x, stringsAsFactors = FALSE), filename = x)))
+
+tbl = tbl %>% 
+  group_by(filename) %>% 
+  mutate(pos = row_number())
+
+nfeatures = 35
+
+features_G = tbl %>% 
+  filter(!str_detect(Feature, "foto")) %>% 
+  filter(pos < nfeatures) %>%
+  ggplot(aes(Gain, fct_reorder(Feature, Gain))) +
+  geom_col() +
+  geom_col(aes(fill = filename)) +
+  facet_wrap(~ filename, nrow = 1) +
+  theme_minimal() +
+  theme(
+      legend.position = "none",
+      plot.background = element_rect(fill = "#3e3d40", color = "#3e3d40"),
+      strip.text.x = element_text(hjust = 0, color = "#dcbf35"),
+      axis.title.x.top = element_text(color = "#dcbf35", hjust = 0),
+      panel.grid.major.y = element_blank(),
+      panel.grid.minor.y = element_blank(),
+      panel.grid.major.x = element_line(color = "#dcbf35"),
+      panel.grid.minor.x = element_blank(),
+      axis.text.y = element_text(colour = "white", size = 6),
+      axis.title.y = element_blank(),
+      axis.title.x = element_text(hjust = 0.5, colour = "grey"),
+      axis.text.x = element_text(color = "#dcbf35"),
+      plot.title = element_text(colour = "grey")) +
+  labs(title = str_c("Top ", nfeatures," Features Gain by Experiment"))
+
+plotly::ggplotly(features_G)
+
+```
+
+```{r, fig.height=8, fig.width=14}
+features_G2 = tbl %>%
+  filter(!str_detect(Feature, "foto")) %>%
+  filter(pos < 35) %>%
+  mutate(Gain = round(Gain, digits = 4)) %>%
+  ggplot(aes(fill=Feature, y=Gain, x=filename)) +
+  geom_point( stat="identity") +
+  ggrepel::geom_label_repel(aes(label = Feature)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1),
+        legend.position = "none")
+
+plotly::ggplotly(features_G2)
+
+```
+# Modelos por mes
+
+```{r}
+setwd("~/R/labo/datasets")
+
+filenames <- list.files(pattern="bo_log_20*")
+
+tbl <- do.call(rbind, 
+               lapply(filenames, function(x) 
+                 cbind(fread(x, stringsAsFactors = FALSE), filename = x)))
+
+tbl %>%
+  filter(!str_detect(filename, "10|11")) %>% 
+  group_by(filename) %>% 
+  arrange(desc(ganancia)) %>% 
+  slice(1:15) %>% 
+  ggplot(aes(fill=filename, x=filename, y=ganancia/1000000)) +
+  geom_boxplot( ) +
+  labs(title = "Entrenando modelos en datos mensuales y ganancia obtenidas en los 15 mejores")
+
+
+```
+
+<!-- # Modelo Denicolay1 -->
+
+<!-- ```{r, eval= (primera_parte | AI), echo = T} -->
+<!-- kdataset       <- "./datasets/paquete_premium_ext_721.csv.gz" -->
+<!-- #donde entrenar -->
+<!-- kfinal_mes_desde    <- 201912        #mes desde donde entreno -->
+<!-- kfinal_mes_hasta    <- 202011        #mes hasta donde entreno, inclusive -->
+<!-- kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento -->
+<!-- #hiperparametros de LightGBM -->
+<!-- #aqui copiar a mano lo menor de la Bayesian Optimization -->
+<!-- # si es de IT y le gusta automatizar todo, no proteste, ya llegara con MLOps -->
+<!-- kmax_bin           <-    31 -->
+<!-- klearning_rate     <-     0.0131094708 -->
+<!-- knum_iterations    <-   951 -->
+<!-- knum_leaves        <-  1002 -->
+<!-- kmin_data_in_leaf  <- 16918 -->
+<!-- kfeature_fraction  <-     0.5609450635 -->
+
+<!-- # 8120FEa_gustavo -->
+<!-- # Contiene: lag1, tendencia6, avg6, minimo, delta1 -->
+<!-- # 8120ZZ_gustavo -->
+<!-- # Contiene: Semillero 50 -->
+
+
+<!-- ``` -->
