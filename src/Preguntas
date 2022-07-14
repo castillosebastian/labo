@@ -4,6 +4,7 @@ Ronda 0:
       Con lag1 y tendenciaYmuchomas activo pleno en 3 y 6, mas tendencia 9 12
       TS anual+excluidos:202001, 202002, 202005, 202006, 
       NO FUNCIONO
+      
 8000: Inicial
       Scripts por defecto.
 
@@ -20,11 +21,40 @@ Ronda 0:
 8121c: Entreno desde 201912 a septiembre sin jun, todo lo demás igual, con nueva HT. MALO
 
 
-8122_serie: dataset inicia con más variabes que 8121.
+8122_serie: dataset inicial con más variabes que 8121.
+8122a: buenos resultados. 
+ train:
+    periodos: [ ]
+    rango:
+      desde:  202007
+      hasta:  202009
+    excluir: [ 202006 ]
+ train_final:
+    periodos: [ ]
+    rango:
+      desde:  202009
+      hasta:  202011
+    excluir: [ 202006 ]
+    
+8122b:
+      Train desde-hasta: 202009
+      Train_final desda-hasta: 202011
+      
+      
+8122c: como el 8122a pero excluyendo mayo. GRAN APUESTA
+      Train desde-hasta:  202007-202009, excluir: [ 202005 ]
+      Train_final desda-hasta: 202009-202011, excluir: [ 202005]
+      CONFIRMADO MAYOR GANANCIA!
+  
+  
+8122d: ¿a quien excluyo?
+      Train desde-hasta:  202003-202009, excluir: [ 202005, 202006 ]
+      Train_final desda-hasta: 202003-202009, excluir: [ 202005, 202006 ]   
 
 
 8131HBa: primera hibridación. Intento de prueba porque estoy trabajando con experimentos de malos
         resultados individuales. Re-start!
+8131HBd: segunda hibridación.
 
 
 FE: 
