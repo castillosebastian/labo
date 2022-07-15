@@ -24,37 +24,31 @@ Ronda 0:
 8122_serie: dataset inicial con más variabes que 8121.
 8122a: buenos resultados. 
  train:
-    periodos: [ ]
-    rango:
       desde:  202007
       hasta:  202009
     excluir: [ 202006 ]
  train_final:
-    periodos: [ ]
-    rango:
       desde:  202009
       hasta:  202011
-    excluir: [ 202006 ]
-    
+      excluir: [ 202006 ]
 8122b:
       Train desde-hasta: 202009
       Train_final desda-hasta: 202011
-      
+      RESULTADOS MALOS
       
 8122c: como el 8122a pero excluyendo mayo. GRAN APUESTA
       Train desde-hasta:  202007-202009, excluir: [ 202005 ]
       Train_final desda-hasta: 202009-202011, excluir: [ 202005]
       CONFIRMADO MAYOR GANANCIA!
   
-  
 8122d: ¿a quien excluyo?
-      Train desde-hasta:  202003-202009, excluir: [ 202005, 202006 ]
-      Train_final desda-hasta: 202003-202009, excluir: [ 202005, 202006 ]   
+      Train desde-hasta:  202003-202009, excluir: [ 202005,]
+      Train_final desda-hasta: 202003-202009, excluir: [ 202005]   
 
 
 8131HBa: primera hibridación. Intento de prueba porque estoy trabajando con experimentos de malos
-        resultados individuales. Re-start!
-8131HBd: segunda hibridación.
+        resultados individuales. Re-start!. Buenos Resultados
+8131HBd: segunda hibridación. Buenos resultados.
 
 
 FE: 
