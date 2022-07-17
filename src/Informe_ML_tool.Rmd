@@ -92,8 +92,14 @@ df = fread("~/R/labo/exp/8122HTb/8122HTb.csv") %>%
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8122HTc/8122HTc.csv") %>% 
-  mutate(filename = "8122HTc", gananciaPublic = 21.12460)
+  mutate(filename = "8122HTc", gananciaPublic = 21.41459)
 ganancia = bind_rows(ganancia, df)
+# Entrenando -------
+df = fread("~/R/labo/exp/8122HTd/8122HTd.csv") %>% 
+  mutate(filename = "8122HTd", gananciaPublic = 20.09462)
+ganancia = bind_rows(ganancia, df)
+
+
 
 # Hibridaciones
 gan_8131 = ganancia %>% filter(str_detect(filename, "8121HTb|8122HTa")) %>% 
@@ -110,18 +116,25 @@ gan_8131d = ganancia %>% filter(str_detect(filename, "8122HTb|8122HTa" )) %>%
   dplyr::select(ganancia) %>% 
   summarise_all(median) 
 
+gan_8131e = ganancia %>% filter(str_detect(filename, "8122HTc|8122HTd" )) %>% 
+  group_by(filename) %>% 
+  arrange(desc(ganancia)) %>%
+  slice(1:10) %>%  ungroup() %>% 
+  dplyr::select(ganancia) %>% 
+  summarise_all(median) 
+
+
 #8131HBc: [ "8121ZZb", "8122ZZa" ]  
 #8131HBd: [ "8122ZZb", "8122ZZa" ] 
+#8131HBd:   [ "8122ZZc", "8122ZZd" ]  
 
 temp = tribble(
   ~filename, ~ganancia, ~gananciaPublic,  
   "8131HBc_8121ZZb+81222ZZa", gan_8131$ganancia, 21.10960,  
   "8131HBd_8122ZZb+81222ZZa", gan_8131d$ganancia, 21.44459,  
-  
+  "8131HBe_8122ZZc+81222ZZd", gan_8131d$ganancia, 20.70461
   
 )
-
-
 
 #----------------------
 ganancia_G = ganancia %>% 
