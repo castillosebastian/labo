@@ -98,7 +98,10 @@ ganancia = bind_rows(ganancia, df)
 df = fread("~/R/labo/exp/8122HTd/8122HTd.csv") %>% 
   mutate(filename = "8122HTd", gananciaPublic = 20.09462)
 ganancia = bind_rows(ganancia, df)
-
+# Entrenando -------
+df = fread("~/R/labo/exp/8122HTe/8122HTe.csv") %>% 
+  mutate(filename = "8122HTe", gananciaPublic = 19.66463)
+ganancia = bind_rows(ganancia, df)
 
 
 # Hibridaciones
@@ -170,10 +173,9 @@ for(i in 1:nexp){
   
   tb = unlist(df$V1[i])
   tb = tibble(parametros =  names(tb), valores = as.character(tb))
-  tb = tb %>% mutate(descartarF = str_detect(valores, "FALSE|0"))
-  tb = tb %>% filter(!descartarF) %>% 
-    mutate(experimento = df$filename[i]) %>% 
-    select(-descartarF)
+  tb = tb %>% mutate(features_incluidos = !str_detect(valores, "FALSE|0"))
+  tb = tb %>% 
+    mutate(experimento = df$filename[i])
   
   df_total <- rbind(df_total, tb)
 

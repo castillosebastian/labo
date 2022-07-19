@@ -35,22 +35,27 @@ Ronda 0:
       Train desde-hasta: 202009
       Train_final desda-hasta: 202011
       RESULTADOS MALOS
-      
 8122c: como el 8122a pero excluyendo mayo. GRAN APUESTA
       Train desde-hasta:  202007-202009, excluir: [ 202005 ]
       Train_final desda-hasta: 202009-202011, excluir: [ 202005]
-      CONFIRMADO MAYOR GANANCIA!
-  
-8122d: ¿a quien excluyo?
+      Mayor ganancia sin semillerio. 
+8122d: Ver período largo de entrenamiento
       Train desde-hasta:  202003-202009, excluir: [ 202005,]
-      Train_final desda-hasta: 202003-202009, excluir: [ 202005]   
-
-
+      Train_final desda-hasta: 202003-202011, excluir: [ 202005]   
+      
 8131HBa: primera hibridación. Intento de prueba porque estoy trabajando con experimentos de malos
         resultados individuales. Re-start!. Buenos Resultados
 8131HBd: segunda hibridación. Buenos resultados.
+8131HBe: Hibridació malos resultados
+
+-----------CONCLUSION INTERMEDIA: entrenar en períodos cortos: modelo: 8122c!!!--------
 
 
+8122e: HT con busqueda de parametros no explorados. ej lambda1 y lambda2: malos resultados
+8122f: parecido al c, pero expando período de entrenamiento y final de jun-septiembre y jun-noviembre.
+
+
+##------------------------------------------------------------------------------
 FE: 
 tendenciaYmuchomas: activar todo 3,5
 
@@ -84,7 +89,26 @@ Para elgir el modelo debe hacerse la evaluación de cuáles son los modelos sist
 VIDEO:
 Contar dicisiones, qué funcionó y que no funcionó. 
 Presi.
+Mariana: ¿que pasaría si el banco pudiera leer la mente de sus clientes y generar acciones 
+          para mantenerlos siempre conformes? Si me permitis una metáfora te lo expondría así: 
+          ¿como hacemos del banco un 'máquina perferecta' de retención, capaz de detectar la menor 'brisa' 
+          o señal de nuestros clientes y transformala en 'impulso' que nos adelante a nuestra competencia?
+          
+          
+Juan Grande:  gerente de business intelligence de la compañía, estructurado, metódico y reservado.
+Juan espera de usted un video con una breve presentación de alrededor de 5 minutos en donde con un
+storytelling le cuente la forma en que resolvió el problema, los hallazgos más importantes. Esta no es una
+tesis de maestría, usted no debe explicar el algoritmo árbol de decisión ni gradient boosting, usted debe ir
+al grano con Juan, pero sorprenderlo.
 
+Miranda Wintour, argentina, 48 años, dos hijas gemelas pre adolescentes, es la directora comercial de la
+compañía desde hace dos años y medio, y en su meteórica carrera se pronostica que llegará a la gerencia
+general en dos años más. Miranda busca ideas revolucionarias que le permitan aumentar la posición de liderazgo que ya ostenta la compañía.
+
+
+
+          
+          
 
 Plan de experimentacino---------------------------------------------------
 TS: 8220 ¿cual meses son mejores para entrenar?

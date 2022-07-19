@@ -1,0 +1,72 @@
+---
+title: "Informe Directora Comercial"
+author: "Claudio Sebastián Castillo"
+date: "`r format(Sys.Date(), '%d de %B de %Y') `"
+output:
+  html_document:
+    toc: yes
+    toc_depth: '3'
+    df_print: paged
+  pdf_document:
+    number_sections: yes
+    toc: yes
+    toc_depth: 3
+linestretch: 1
+params:
+  AnalisisIntegrador: no
+  primera_parte: no
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
+knitr::opts_chunk$set(fig.align = 'center')
+options(DT.options = list(pageLength = 35, language = list(search = 'Filter:')))
+source("Unidad0_repos_and_tools.R")
+library(forcats)
+library(data.table)
+library(gganimate)
+theme_set(theme_bw())
+
+```
+
+
+```{r}
+# https://www.datanovia.com/en/blog/gganimate-how-to-create-plots-with-beautiful-animation-in-r/
+```
+
+
+```{r}
+#Aqui se debe poner la carpeta de la computadora local
+setwd("~/R/labo")  #Establezco el Working Directory
+#cargo el dataset donde voy a entrenar
+dataset  <- fread("./datasets/paquete_premium_202011.csv", stringsAsFactors= TRUE)
+```
+
+```{r}
+# df_numeric = df %>% dplyr::select_if(is.numeric)
+# df_numeric = as_tibble(df_numeric)
+# var_target = df %>% dplyr::select(clase_ternaria) #%>% 
+  # mutate(clase_ternaria = case_when(
+  #   clase_ternaria == "CONTINUA"  ~ 1,
+  #   clase_ternaria == 'BAJA+1' ~ -1,
+  #   clase_ternaria == 'BAJA+2' ~ -2))
+
+```
+
+
+```{r}
+library(gapminder)
+
+p <- ggplot(
+  gapminder, 
+  aes(x = gdpPercap, y=lifeExp, size = pop, colour = country)
+  ) +
+  geom_point(show.legend = FALSE, alpha = 0.7) +
+  scale_color_viridis_d() +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  labs(x = "GDP per capita", y = "Life expectancy")
+p
+```
+
+
