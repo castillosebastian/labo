@@ -54,6 +54,24 @@ df = dataset %>%
   mutate(date = as.Date(str_c(foto_mes, "01"), "%Y%m%d"))
 
 
+#variable nuevas
+df[  , mpayroll_sobre_edad  := mpayroll / cliente_edad ]
+df[ , mv_status01       := pmax( Master_status,  Visa_status, na.rm = TRUE) ]
+df[ , mv_status02       := Master_status +  Visa_status ]
+df[ , mv_mfinanciacion_limite := rowSums( cbind( Master_mfinanciacion_limite,  Visa_mfinanciacion_limite) , na.rm=TRUE ) ]
+df[ , mv_Fvencimiento         := pmin( Master_Fvencimiento, Visa_Fvencimiento, na.rm = TRUE) ]
+df[ , mv_Finiciomora          := pmin( Master_Finiciomora, Visa_Finiciomora, na.rm = TRUE) ]
+df[ , mv_msaldototal          := rowSums( cbind( Master_msaldototal,  Visa_msaldototal) , na.rm=TRUE ) ]
+df[ , mv_msaldopesos          := rowSums( cbind( Master_msaldopesos,  Visa_msaldopesos) , na.rm=TRUE ) ]
+df[ , mv_msaldodolares        := rowSums( cbind( Master_msaldodolares,  Visa_msaldodolares) , na.rm=TRUE ) ]
+df[ , total_deuda_acumulada := rowSums( cbind( mprestamos_personales, mprestamos_prendarios, mprestamos_hipotecarios), na.rm=TRUE ) ] #top 11
+df[ , ratio_deuda_acumulada_antiguedad  := total_deuda_acumulada / cliente_antiguedad ]
+df[ , ratio_deuda_acumulada_cproductos_sobre_ctrx_q  := total_deuda_acumulada / ctrx_quarter_normalizado ]
+df[ , mrentabilidad_sobre_antiguedad  := mrentabilidad / cliente_antiguedad ]
+df[ , mrentabilidad_annual_sobre_antiguedad  :=  mrentabilidad_annual/ cliente_antiguedad ]
+
+
+
 # graficos temporales
 # Señal temprana de baja
 p = df %>% 
