@@ -21,52 +21,199 @@ params:
 knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
 knitr::opts_chunk$set(fig.align = 'center')
 options(DT.options = list(pageLength = 35, language = list(search = 'Filter:')))
-source("Unidad0_repos_and_tools.R")
-library(forcats)
-library(data.table)
-library(gganimate)
-theme_set(theme_bw())
-
-```
-
-
-```{r}
-# https://www.datanovia.com/en/blog/gganimate-how-to-create-plots-with-beautiful-animation-in-r/
-```
-
-
-```{r}
-#Aqui se debe poner la carpeta de la computadora local
-setwd("~/R/labo")  #Establezco el Working Directory
-#cargo el dataset donde voy a entrenar
-dataset  <- fread("./datasets/paquete_premium_202011.csv", stringsAsFactors= TRUE)
-```
-
-```{r}
-# df_numeric = df %>% dplyr::select_if(is.numeric)
-# df_numeric = as_tibble(df_numeric)
-# var_target = df %>% dplyr::select(clase_ternaria) #%>% 
-  # mutate(clase_ternaria = case_when(
-  #   clase_ternaria == "CONTINUA"  ~ 1,
-  #   clase_ternaria == 'BAJA+1' ~ -1,
-  #   clase_ternaria == 'BAJA+2' ~ -2))
-
-```
-
-
-```{r}
+library(ggplot2)
 library(gapminder)
+library(gganimate)
+library(dplyr)
+library(data.table)
+library(stringr)
+library(directlabels)
+options(scipen = 999)
 
-p <- ggplot(
-  gapminder, 
-  aes(x = gdpPercap, y=lifeExp, size = pop, colour = country)
-  ) +
-  geom_point(show.legend = FALSE, alpha = 0.7) +
-  scale_color_viridis_d() +
-  scale_size(range = c(2, 12)) +
-  scale_x_log10() +
-  labs(x = "GDP per capita", y = "Life expectancy")
-p
 ```
 
+
+```{r}
+## 'gapminder', 'gganimate', 
+# https://www.datanovia.com/en/blog/gganimate-how-to-create-plots-with-beautiful-animation-in-r/
+
+setwd( "~/buckets/b1/" )  #cambiar por la carpeta local
+
+#leo el dataset
+dataset_grande  <- fread( "./datasets/paquete_premium.csv.gz", stringsAsFactors= TRUE)
+
+#me quedo SOLO con los BAJA+2
+dataset  <- copy( dataset_grande[  clase_ternaria =="BAJA+2"  & 
+                                     foto_mes>=202001  & foto_mes<=202011, ] )
+
+#armo el dataset de los 12 meses antes de la muerte de los registros que analizo
+dataset12  <- copy( dataset_grande[  numero_de_cliente %in%  dataset[ , unique(numero_de_cliente)]  ]  )
+
+#asigno para cada registro cuantos meses faltan para morir
+setorderv( dataset12, c("numero_de_cliente", "foto_mes"), c(1,-1) )
+dataset12[  , pos := seq(.N) , numero_de_cliente ]
+#me quedo solo con los 12 meses antes de morir
+dataset12  <- dataset12[  pos <= 12 , ]
+
+# data set continua
+#me quedo SOLO con los BAJA+2
+datasetC <- copy( dataset_grande[  clase_ternaria =="CONTINUA"  & 
+                                     foto_mes>=202001  & foto_mes<=202011, ] )
+
+#armo el dataset de los 12 meses antes de la muerte de los registros que analizo
+dataset12C  <- copy( dataset_grande[  numero_de_cliente %in%  datasetC[ , unique(numero_de_cliente)]  ]  )
+
+#asigno para cada registro cuantos meses faltan para morir
+setorderv( dataset12C, c("numero_de_cliente", "foto_mes"), c(1,-1) )
+dataset12C[  , pos := seq(.N) , numero_de_cliente ]
+#me quedo solo con los 12 meses antes de morir
+dataset12C  <- dataset12C[  pos <= 12 , ]
+dataset12C <- dataset12C[ clase_ternaria == "CONTINUA", ]
+
+dataset12$grupo = "grupo_baja"
+dataset12C$grupo = "grupo_continua"
+dataset = bind_rows(dataset12, dataset12C)
+
+# Formateo fecha
+df = dataset %>% 
+  select(-c(clase_ternaria, numero_de_cliente)) %>% 
+  mutate(date = as.Date(str_c(foto_mes, "01"), "%Y%m%d"))
+```
+
+# Señal temprana de renuncia de clientes (BAJA+2)
+
+```{r}
+# graficos temporales
+# Señal temprana de baja
+p = df %>% 
+  filter(date > as.Date("2020-01-01")) %>% 
+  group_by(date, grupo) %>% summarise_all(sum, na.rm = T) %>% 
+  group_by(grupo) %>% mutate(ctrx_quarter_scaled = scale(ctrx_quarter)) %>% 
+  ggplot(aes(y = ctrx_quarter_scaled, x=date, colour = grupo)) +
+  geom_line() +
+  theme(legend.position = "top", legend.title = element_blank()) +
+  labs(title = "Señales de Baja: cantidad de transacciones",
+       y = "Cantidad transacciones trimestrales", x = "") 
+p + 
+  geom_point() +
+  transition_reveal(date)
+```
+
+
+# Propaga la señal a otras variables?
+
+## Medianas
+
+```{r}
+# Propaga la señal a otras variables?
+campos_buenos  <- c( "date", "grupo", "ctrx_quarter", "cpayroll_trx", "mcaja_ahorro", "mtarjeta_visa_consumo", "ctarjeta_visa_trx",
+                     "mcuentas_saldo", "mrentabilidad_annual", "mprestamos_personales", "mactivos_margen", "mpayroll",
+                     "Visa_mpagominimo", "Master_fechaalta", "cliente_edad", "chomebanking_trx", "Visa_msaldopesos",
+                     "Visa_Fvencimiento", "mrentabilidad", "Visa_msaldototal", "Master_Fvencimiento", "mcuenta_corriente",
+                     "Visa_mpagospesos", "Visa_fechaalta", "mcomisiones_mantenimiento", "Visa_mfinanciacion_limite",
+                     "mtransferencias_recibidas", "cliente_antiguedad", "Visa_mconsumospesos", "Master_mfinanciacion_limite",
+                     "mcaja_ahorro_dolares", "cproductos", "mcomisiones_otras", "thomebanking", "mcuenta_debitos_automaticos",
+                     "mcomisiones", "Visa_cconsumos", "ccomisiones_otras", "Master_status", "mtransferencias_emitidas",
+                     "mpagomiscuentas")
+# promedio
+df_allvars = df %>% 
+  filter(date > as.Date("2020-01-01")) %>% 
+  group_by(date, grupo) %>%
+  #summarise_all(sum, na.rm = T) %>% 
+  summarise_all(median, na.rm = T) %>% 
+  select(campos_buenos) %>% 
+  filter(date != as.Date("2020-06-01"))
+
+temp = df_allvars %>% ungroup() %>% select(-c(date, grupo)) %>% mutate_all(scale) 
+
+df_allvars = temp %>% 
+  mutate(grupo = df_allvars$grupo, 
+         date = df_allvars$date)
+
+df_allvars = df_allvars %>% 
+  tidyr::pivot_longer(names_to = "variables", values_to = "valores", -c(grupo, date)) 
+
+df_allvars %>% 
+  ggplot(aes(y = valores, x=date, colour = variables)) +
+  geom_line() +
+  theme(legend.position = "none") +
+  labs(title = "Señales de Baja: cantidad de transacciones",
+       y = "Cantidad transacciones trimestrales", x = "")  +
+  facet_wrap(~grupo, scales = "free")
+```
+
+## Suma 
+
+```{r}
+# Suma sin escalamiento
+df_allvars = df %>% 
+  filter(date > as.Date("2020-01-01")) %>% 
+  select(campos_buenos) %>% 
+  group_by(date, grupo) %>%
+  summarise_all(sum, na.rm = T) %>% 
+  filter(date != as.Date("2020-06-01"))
+
+# temp = df_allvars %>% ungroup() %>% select(-c(date, grupo)) %>% mutate_all(scale)
+# df_allvars = temp %>%
+#   mutate(grupo = df_allvars$grupo,
+#          date = df_allvars$date)
+
+df_allvars = df_allvars %>% 
+  tidyr::pivot_longer(names_to = "variables", values_to = "valores", -c(grupo, date)) 
+
+df_allvars %>% 
+  #filter(date > as.Date("2020-07-01")) %>% 
+  ggplot(aes(y = valores, x=date, colour = variables)) +
+  geom_line() +
+  geom_dl(aes(label = variables), method = list(dl.trans(x = x + 4), "first.points", cex = 0.8)) +
+  scale_y_log10() +
+  scale_x_date( date_labels = "%b-%Y") +
+  theme(legend.position = "none") +
+  labs(title = "Señales de Baja: otras variables",
+       y = "Otros datos bancarios", x = "")  +
+  facet_wrap(~grupo, scales = "free")
+```
+
+# Seña en el caso del consumo mediante Tarjetas de Crédito
+
+```{r}
+# Límite de financiacion de la tarjeta de crédito, expresado en pesos.
+df_allvars = df %>% 
+  filter(date > as.Date("2020-01-01")) %>% 
+  select(campos_buenos) %>% 
+  group_by(date, grupo) %>%
+  summarise_all(sum, na.rm = T) %>% 
+  filter(date != as.Date("2020-06-01"))
+
+temp = df_allvars %>% ungroup() %>% select(-c(date, grupo)) %>% mutate_all(scale)
+
+df_allvars = temp %>%
+  mutate(grupo = df_allvars$grupo,
+         date = df_allvars$date)
+
+df_allvars = df_allvars %>% 
+  tidyr::pivot_longer(names_to = "variables", values_to = "valores", -c(grupo, date)) 
+
+df_allvars %>% 
+  filter(str_detect(variables, "limite|consumo")) %>% 
+  ggplot(aes(y = valores, x=date, colour = variables)) +
+  geom_line() +
+  geom_dl(aes(label = variables), method = list(dl.trans(x = x + 4), "first.points", cex = 0.8)) +
+  scale_x_date( date_labels = "%b-%Y") +
+  theme(legend.position = "none") +
+  labs(title = "Señales de Baja: Consumo Visa-Master",
+       y = "Otros datos bancarios", x = "")  +
+  facet_wrap(~grupo, scales = "free")
+```
+
+# Otra Representación 
+
+```{r}
+# # Comparacion en otras variables
+library(lattice)
+temp = df %>% 
+  select(grupo, everything(), -date)
+parallelplot(~temp[2:159] | grupo, data=temp)
+
+```
 
