@@ -102,6 +102,10 @@ ganancia = bind_rows(ganancia, df)
 df = fread("~/R/labo/exp/8122HTe/8122HTe.csv") %>% 
   mutate(filename = "8122HTe", gananciaPublic = 19.66463)
 ganancia = bind_rows(ganancia, df)
+# Entrenando-------
+df = fread("~/R/labo/exp/8122HTf/8122HTf.csv") %>% 
+  mutate(filename = "8122HTf", gananciaPublic = 17.42967)
+ganancia = bind_rows(ganancia, df)
 
 
 # Hibridaciones
