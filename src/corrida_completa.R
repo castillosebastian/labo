@@ -28,4 +28,8 @@ source("~/labo/src/lib/exp_lib.r")
 # exp_start( "8122TSf",  deletevm= FALSE)
 # exp_start( "8122HTf",  deletevm= FALSE)
 # exp_start( "8122ZZf",  deletevm= FALSE)
+exp_start( "8122TSg",  deletevm= FALSE)
+exp_start( "8122HTg",  deletevm= FALSE)
+exp_start( "8122ZZg",  deletevm= FALSE)
+exp_start( "8131HBf")
 
