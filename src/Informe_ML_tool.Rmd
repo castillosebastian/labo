@@ -43,8 +43,8 @@ setwd("~/R/labo/exp/8120HTa/")
 filenames <- list.files(pattern="*.csv")
 tbl <- do.call(rbind, lapply(filenames, function(x) cbind(fread(x, stringsAsFactors = FALSE), filename = x))) 
 tbl = tbl %>% mutate(filename = str_replace_all(filename, "\\.csv", ''))
-  
-tbl$gananciaPublic[str_detect(tbl$filename, "seba")] = 21.74459
+#----
+tbl$gananciaPublic[str_detect(tbl$filename, "8120HTa")] = 21.74459
 ganancia = tbl
 #----
 df = fread("~/R/labo/exp/8320HTa/8320HTa.csv") %>% 
@@ -170,6 +170,7 @@ ganancia_G = ganancia %>%
 
 plotly::ggplotly(ganancia_G)
 ```
+
 # Tabla para revisión de parámetros de experiementos corridos (parcial)
 
 ```{r, eval= (primera_parte | AI)}
@@ -202,6 +203,35 @@ DT::datatable(df_total, class = "cell-border stripe", rownames = FALSE, filter =
               options = list(dom="Bfrtip",  buttons =c("copy", "csv", "excel", "pdf","print")))
 
 ```
+
+
+
+```{r}
+ts <- df_total %>% 
+  filter(str_detect(parametros, "desde|hasta|periodos|train.excluir"))
+
+temp = ts %>% 
+  filter(str_detect(parametros, "excluir")) %>% 
+  group_by(experimento) %>% 
+  summarise(excluir = str_c(valores, collapse = ", "))
+
+ts = ts %>% 
+  filter(!str_detect(parametros, "excluir")) %>% 
+  mutate(parametros = str_replace_all(parametros, " ", "_")) %>% 
+  pivot_wider(names_from = parametros, values_from = valores) %>% 
+  select(-c(features_incluidos, future.periodos, validate.rango.desde,  
+            validate.rango.hasta, test.rango.desde, test.rango.hasta)) %>% 
+  left_join(temp) %>% 
+  mutate(filename = str_sub(experimento, 1,7)) %>% 
+  mutate(filename = str_replace_all(filename, "TS", "HT")) %>% 
+  left_join(ganancia %>% select(filename, ganancia, gananciaPublic) %>% 
+              group_by(filename) %>% 
+              filter(ganancia == max(ganancia))) %>% 
+  arrange(desc(ganancia))
+```
+
+
+
 
 # Revisión de features
 

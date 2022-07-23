@@ -53,7 +53,14 @@ Ronda 0:
 
 8122e: HT con busqueda de parametros no explorados. ej lambda1 y lambda2: malos resultados
 8122f: parecido al c, pero expando período de entrenamiento y final de jun-septiembre y jun-noviembre. MALO
-
+8122g: parecido al c, pero ajusto rangos de busqueda en optimización bayesiana y semillerios 150:
+    learning_rate:      [ 0.01, 0.06]
+    feature_fraction:   [ 0.1, 0.6 ]
+    num_leaves:         [ 16, 1824, "integer" ]
+    min_data_in_leaf:   [ 200, 2800, "integer" ]
+    semillerio:  150 # En ZZZ
+8122h: cambio max_depht to 6
+8122i: replicar 8200! con nuevo FE
 
 
 ##------------------------------------------------------------------------------

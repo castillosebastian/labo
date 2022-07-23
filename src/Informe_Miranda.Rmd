@@ -24,10 +24,11 @@ options(DT.options = list(pageLength = 35, language = list(search = 'Filter:')))
 library(ggplot2)
 library(gapminder)
 library(gganimate)
-library(dplyr)
 library(data.table)
 library(stringr)
 library(directlabels)
+library(dplyr)
+library(GGally)
 options(scipen = 999)
 
 ```
@@ -212,8 +213,31 @@ df_allvars %>%
 # # Comparacion en otras variables
 library(lattice)
 temp = df %>% 
-  select(grupo, everything(), -date)
-parallelplot(~temp[2:159] | grupo, data=temp)
+ select(grupo, everything()) %>% 
+  select(1:20)
 
+parallelplot(~temp[2:20] | grupo, data=temp)
+
+```
+
+
+```{r}
+
+
+# Plot
+df_allvars = df %>% 
+  filter(date > as.Date("2020-01-01")) %>% 
+  select(grupo, everything(), -foto_mes)
+temp = df_allvars %>% select(1:40) %>% mutate(grupo= as.factor(grupo))
+temp = temp %>% group_by(grupo) %>% slice(1:200)
+
+ggparcoord(temp,
+    columns = 20:25, groupColumn = 1, order = "anyClass",
+    scale="uniminmax",
+    showPoints = TRUE, 
+    title = "No scaling",
+    alphaLines = 0.3) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+ 
 ```
 
