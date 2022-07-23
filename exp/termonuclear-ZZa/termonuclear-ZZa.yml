@@ -8,7 +8,7 @@ googlecloud:
 
 
 experiment:
-  script: "src/completo/z992_ZZ_lightgbm_semillerio.r"
+  script: "src/completo/z993_ZZ_lightgbm_semillerio.r"
   restart: TRUE
   name: "exp"
   type: "ZZ"
