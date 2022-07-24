@@ -60,8 +60,11 @@ Ronda 0:
     min_data_in_leaf:   [ 200, 2800, "integer" ]
     semillerio:  150 # En ZZZ
 8122h: cambio max_depht to 6
+      Buenos resultados!
 8122i: replicar 8200! con nuevo FE
   201912-202009, 202010-202011, 201912-202011 con exclucions 202001, 202002, 202005, 202006
+  MALO RESULTADOS!
+8122j: incluyo parámetro extra_trees, experimento de base 8122g
 
 
 ##------------------------------------------------------------------------------
