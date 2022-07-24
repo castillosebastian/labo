@@ -22,9 +22,11 @@ knitr::opts_chunk$set(echo = F, warning = F, message = F, comment=NA )
 knitr::opts_chunk$set(fig.align = 'center')
 options(DT.options = list(pageLength = 35, language = list(search = 'Filter:')))
 source("Unidad0_repos_and_tools.R")
+options(scipen = 999)
 library(yaml)
 library(DT)
 library(forcats)
+library(kableExtra)
 ```
 
 ```{r, params}
@@ -114,6 +116,11 @@ ganancia = bind_rows(ganancia, df)
 df = fread("~/R/labo/exp/8122HTh/8122HTh.csv") %>% 
   mutate(filename = "8122HTh", gananciaPublic = 21.65959)
 ganancia = bind_rows(ganancia, df)
+# Entrenando-------
+df = fread("~/R/labo/exp/8122HTi/8122HTi.csv") %>% 
+  mutate(filename = "8122HTi", gananciaPublic = 18.95964)
+ganancia = bind_rows(ganancia, df)
+
 
 # Hibridaciones
 gan_8131 = ganancia %>% filter(str_detect(filename, "8121HTb|8122HTa")) %>% 
@@ -217,7 +224,7 @@ DT::datatable(df_total, class = "cell-border stripe", rownames = FALSE, filter =
 
 ```
 
-
+# Tabla de revisión de Estrategia de Entrenamiento y sus respectivas ganancias
 
 ```{r}
 ts <- df_total %>% 
@@ -226,7 +233,8 @@ ts <- df_total %>%
 temp = ts %>% 
   filter(str_detect(parametros, "excluir")) %>% 
   group_by(experimento) %>% 
-  summarise(excluir = str_c(valores, collapse = ", "))
+  summarise(excluir = str_c(valores, collapse = ", ")) %>% 
+  mutate(excluir = str_remove_all(excluir, "20200"))
 
 ts = ts %>% 
   filter(!str_detect(parametros, "excluir")) %>% 
@@ -240,11 +248,69 @@ ts = ts %>%
   left_join(ganancia %>% select(filename, ganancia, gananciaPublic) %>% 
               group_by(filename) %>% 
               filter(ganancia == max(ganancia))) %>% 
+  select(filename, everything()) %>% 
   arrange(desc(ganancia))
+
+ts %>% 
+  kable() %>% 
+  kable_classic(full_width = T, html_font = "Cambria") %>% 
+  column_spec(10, color = "white",
+              background = spec_color(ts$ganancia)) %>% 
+  column_spec(11, color = "white",
+              background = spec_color(ts$gananciaPublic))
 ```
 
+# Revisión de Hiperparámetros
 
+```{r}
+ht <- df_total %>% 
+  filter(str_detect(experimento, "HT")) %>% 
+  filter(str_detect(parametros, "lightgbm|iterations")) %>% 
+  mutate(valores = round(as.numeric(valores), digits = 2)) %>% 
+  filter(!is.na(valores)) %>%# filter(valores != 0) %>% 
+  mutate(parametros = str_remove_all(parametros, "lightgbm.")) %>% 
+  select(-features_incluidos)
 
+ht = ht %>% 
+  pivot_wider(names_from = parametros, values_from = valores) %>% 
+  mutate(filename = str_sub(experimento, 1,7)) %>% 
+  left_join(ganancia %>% select(filename, ganancia, gananciaPublic) %>% 
+              group_by(filename) %>% 
+              filter(ganancia == max(ganancia))) %>% 
+  select(filename,learning_rate1,learning_rate2,feature_fraction1,feature_fraction2,
+         num_leaves1,num_leaves2,min_data_in_leaf1,min_data_in_leaf2,lambda_l1,lambda_l2,
+         max_depth, BO.iterations, ganancia,gananciaPublic) %>% 
+  arrange(desc(ganancia))
+
+ht %>% 
+  kable() %>% 
+  kable_classic(full_width = T, html_font = "Cambria") %>% 
+  column_spec(14, color = "white",
+              background = spec_color(ht$ganancia)) %>% 
+  column_spec(15, color = "white",
+              background = spec_color(ht$gananciaPublic))
+
+```
+
+# Top 10 Modelos según mayor ganancia y sus respectivos hiperparámetros
+
+```{r}
+top10Model = ganancia %>% 
+  arrange(desc(ganancia)) %>% 
+  slice(1:20) %>% 
+  select(experimento,  cols, rows, learning_rate, feature_fraction, num_leaves, min_data_in_leaf,
+         num_iterations, estimulos, ganancia, gananciaPublic) %>% 
+  arrange(desc(ganancia))
+
+top10Model %>% 
+  kable() %>% 
+  kable_classic(full_width = T, html_font = "Cambria") %>% 
+  column_spec(10, color = "white",
+              background = spec_color(top10Model$ganancia)) %>% 
+  column_spec(11, color = "white",
+              background = spec_color(top10Model$gananciaPublic))
+
+```
 
 # Revisión de features
 

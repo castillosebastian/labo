@@ -35,13 +35,17 @@ source("~/labo/src/lib/exp_lib.r")
 # exp_start( "8122HTh",  deletevm= FALSE)
 # exp_start( "8122ZZh",  deletevm= FALSE)
 # exp_start( "8131HBg")
-exp_start( "termonuclear-FEa",  deletevm= FALSE)
-exp_start( "termonuclear-TSa",  deletevm= FALSE)
-exp_start( "termonuclear-HTa",  deletevm= FALSE)
-exp_start( "termonuclear-ZZa",  deletevm= FALSE)
 #exp_start( "8122TSi",  deletevm= FALSE)
-exp_start( "8122HTi",  deletevm= FALSE)
-exp_start( "8122ZZi")
+# exp_start( "8122HTi",  deletevm= FALSE)
+# exp_start( "8122ZZi",  deletevm= FALSE)
+# exp_start( "termonuclear-FEa",  deletevm= FALSE)
+# exp_start( "termonuclear-TSa",  deletevm= FALSE)
+# exp_start( "termonuclear-HTa",  deletevm= FALSE)
+# exp_start( "termonuclear-ZZa",  deletevm= FALSE)
+exp_start( "8122TSj",  deletevm= FALSE)
+exp_start( "8122HTj",  deletevm= FALSE)
+exp_start( "8122ZZj")
+
 
 
 
