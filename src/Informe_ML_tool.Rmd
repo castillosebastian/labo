@@ -120,6 +120,10 @@ ganancia = bind_rows(ganancia, df)
 df = fread("~/R/labo/exp/8122HTi/8122HTi.csv") %>% 
   mutate(filename = "8122HTi", gananciaPublic = 18.95964)
 ganancia = bind_rows(ganancia, df)
+# Entrenando-------
+df = fread("~/R/labo/exp/8122HTj/8122HTj.csv") %>% 
+  mutate(filename = "8122HTj", gananciaPublic = 21.59959)
+ganancia = bind_rows(ganancia, df)
 
 
 # Hibridaciones
@@ -165,6 +169,9 @@ gan_8131g = ganancia %>% filter(str_detect(filename, "8122HTa|8122HTc|8122HTe|81
 #8131HBd: [ "8122ZZc", "8122ZZd" ]  
 #8131HBf: [ "8122ZZa", "8122ZZb", "8122ZZc", "8122ZZd" , "8122ZZe", "8122ZZf" ]  
 #8131HBg: [ "8122ZZa", "8122ZZc", "8122ZZe", "8122ZZg" ]  
+#8131HBh: [ "8122ZZa", "8122ZZb", "8122ZZc", "8122ZZd" , "8122ZZe", "8122ZZf", "8122ZZg" , "8122ZZh", "8122ZZi", "8122ZZj", "8122ZZk",]  
+
+
 temp = tribble(
   ~filename, ~ganancia, ~gananciaPublic,  
   "8131HBc_8121ZZb+8122ZZa", gan_8131$ganancia, 21.10960,  

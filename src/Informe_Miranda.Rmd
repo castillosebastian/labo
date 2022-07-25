@@ -175,7 +175,7 @@ df_allvars %>%
   facet_wrap(~grupo, scales = "free")
 ```
 
-# Seña en el caso del consumo mediante Tarjetas de Crédito
+# Señal en el caso del consumo mediante Tarjetas de Crédito
 
 ```{r}
 # Límite de financiacion de la tarjeta de crédito, expresado en pesos.
@@ -210,21 +210,10 @@ df_allvars %>%
 # Otra Representación 
 
 ```{r}
-# # Comparacion en otras variables
-library(lattice)
-temp = df %>% 
- select(grupo, everything()) %>% 
-  select(1:20)
-
-parallelplot(~temp[2:20] | grupo, data=temp)
-
-```
-
-
-```{r}
-
 
 # Plot
+# Ver limite consumo y otra
+
 df_allvars = df %>% 
   filter(date > as.Date("2020-01-01")) %>% 
   select(grupo, everything(), -foto_mes)

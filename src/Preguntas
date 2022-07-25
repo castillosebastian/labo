@@ -65,6 +65,7 @@ Ronda 0:
   201912-202009, 202010-202011, 201912-202011 con exclucions 202001, 202002, 202005, 202006
   MALO RESULTADOS!
 8122j: incluyo parámetro extra_trees, experimento de base 8122g
+8122k: incluyo parámetro extra_trees, experimento de base 8122g mas max_dept = 6, con 250 semillas
 
 
 ##------------------------------------------------------------------------------
