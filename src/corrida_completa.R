@@ -45,9 +45,12 @@ source("~/labo/src/lib/exp_lib.r")
 # exp_start( "8122TSj",  deletevm= FALSE)
 # exp_start( "8122HTj",  deletevm= FALSE)
 # exp_start( "8122ZZj")
-exp_start( "8122HTk",  deletevm= FALSE)
-exp_start( "8122ZZk",  deletevm= FALSE)
-exp_start( "8131HBh")
-
+# exp_start( "8122HTk",  deletevm= FALSE)
+# exp_start( "8122ZZk",  deletevm= FALSE)
+# exp_start( "8131HBh")
+exp_start( "8122TSl",  deletevm= FALSE)
+exp_start( "8122HTl",  deletevm= FALSE)
+exp_start( "8122ZZl",  deletevm= FALSE)
+exp_start( "8131HBi")
 
 
