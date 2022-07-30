@@ -1,0 +1,96 @@
+---
+title: "Untitled"
+author: "Sebastian Castillo"
+date: '2022-07-25'
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(ggplot2)
+library(gapminder)
+library(gganimate)
+library(data.table)
+library(stringr)
+library(directlabels)
+library(dplyr)
+library(GGally)
+options(scipen = 999)
+```
+
+```{r}
+
+setwd( "~/buckets/b1/" )  #cambiar por la carpeta local
+
+#leo el dataset
+dataset_grande  <- fread( "./datasets/paquete_premium.csv.gz", stringsAsFactors= TRUE)
+
+#me quedo SOLO con los BAJA+2
+dataset  <- copy( dataset_grande[  clase_ternaria =="BAJA+2"  & 
+                                     foto_mes>=202001  & foto_mes<=202011, ] )
+
+#armo el dataset de los 12 meses antes de la muerte de los registros que analizo
+dataset12  <- copy( dataset_grande[  numero_de_cliente %in%  dataset[ , unique(numero_de_cliente)]  ]  )
+
+#asigno para cada registro cuantos meses faltan para morir
+setorderv( dataset12, c("numero_de_cliente", "foto_mes"), c(1,-1) )
+dataset12[  , pos := seq(.N) , numero_de_cliente ]
+#me quedo solo con los 12 meses antes de morir
+dataset12  <- dataset12[  pos <= 12 , ]
+
+# data set continua
+#me quedo SOLO con los BAJA+2
+datasetC <- copy( dataset_grande[  clase_ternaria =="CONTINUA"  & 
+                                     foto_mes>=202001  & foto_mes<=202011, ] )
+
+#armo el dataset de los 12 meses antes de la muerte de los registros que analizo
+dataset12C  <- copy( dataset_grande[  numero_de_cliente %in%  datasetC[ , unique(numero_de_cliente)]  ]  )
+
+#asigno para cada registro cuantos meses faltan para morir
+setorderv( dataset12C, c("numero_de_cliente", "foto_mes"), c(1,-1) )
+dataset12C[  , pos := seq(.N) , numero_de_cliente ]
+#me quedo solo con los 12 meses antes de morir
+dataset12C  <- dataset12C[  pos <= 12 , ]
+dataset12C <- dataset12C[ clase_ternaria == "CONTINUA", ]
+
+dataset12$grupo = "grupo_baja"
+dataset12C$grupo = "grupo_continua"
+dataset = bind_rows(dataset12, dataset12C)
+
+# Formateo fecha
+df = dataset %>% 
+  select(-c(clase_ternaria, numero_de_cliente)) %>% 
+  mutate(date = as.Date(str_c(foto_mes, "01"), "%Y%m%d"))
+```
+
+## Señal temprana de Baja
+
+```{r}
+p = df %>% 
+  filter(date > as.Date("2020-01-01")) %>% 
+  group_by(date, grupo) %>% summarise_all(sum, na.rm = T) %>% 
+  group_by(grupo) %>% mutate(ctrx_quarter_scaled = scale(ctrx_quarter)) %>% 
+  ggplot(aes(y = ctrx_quarter_scaled, x=date, colour = grupo)) +
+  geom_line() +
+  theme(legend.position = "top", legend.title = element_blank()) +
+  labs(title = "Señales de Baja: cantidad de transacciones",
+       y = "Cantidad transacciones trimestrales", x = "") 
+p + 
+  geom_point() +
+  transition_reveal(date)
+```
+
+
+## Slide with R Output
+
+```{r cars, echo = TRUE}
+summary(cars)
+```
+
+## Slide with Plot
+
+```{r pressure}
+plot(pressure)
+```
+

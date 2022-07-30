@@ -1,5 +1,5 @@
 ---
-title: "Informe sobre MLOps"
+title: "Informe sobre Modelo Predictivo de Baja de Clientes "
 author: "Claudio Sebastián Castillo"
 date: "`r format(Sys.Date(), '%d de %B de %Y') `"
 output:
@@ -37,9 +37,9 @@ primera_parte = T
 set.seed(1234)
 ```
 
-# Modelos, gananciaBO, gananciaPublic
+# Experimentos realizados y sus respectivas ganancias proyectadas
 
-```{r,eval= (primera_parte | AI), fig.height=8, fig.width=14}
+```{r,eval= (primera_parte | AI), fig.height=8, fig.width=12}
 #----
 setwd("~/R/labo/exp/8120HTa/")
 filenames <- list.files(pattern="*.csv")
@@ -47,82 +47,87 @@ tbl <- do.call(rbind, lapply(filenames, function(x) cbind(fread(x, stringsAsFact
 tbl = tbl %>% mutate(filename = str_replace_all(filename, "\\.csv", ''))
 #----
 tbl$gananciaPublic[str_detect(tbl$filename, "8120HTa")] = 21.74459
+tbl$grupo = "Features"
 ganancia = tbl
 #----
 df = fread("~/R/labo/exp/8320HTa/8320HTa.csv") %>% 
-  mutate(filename = "8320HTa", gananciaPublic = 18.79964)
+  mutate(filename = "8320HTa", gananciaPublic = 18.79964, grupo = "Features")
 ganancia = bind_rows(ganancia, df)
 #------
 # Entrenados en un mes
 df1 = fread("~/R/labo/exp/8220HTi/8220HTi.csv") %>% 
-  mutate(filename = "8220HTi", gananciaPublic = 21.38960)
+  mutate(filename = "8220HTi", gananciaPublic = 21.38960, grupo = "Train_Strategy")
 df2 = fread("~/R/labo/exp/8220HTh/8220HTh.csv") %>% 
-  mutate(filename = "8220HTh", gananciaPublic = 20.28962)
+  mutate(filename = "8220HTh", gananciaPublic = 20.28962, grupo = "Train_Strategy")
 df3 = fread("~/R/labo/exp/8220HTg/8220HTg.csv") %>% 
-  mutate(filename = "8220HTg", gananciaPublic = 21.26960)
+  mutate(filename = "8220HTg", gananciaPublic = 21.26960, grupo = "Train_Strategy")
 df4 = fread("~/R/labo/exp/8220HTf/8220HTf.csv") %>% 
-  mutate(filename = "8220HTf", gananciaPublic = 21.46459)
+  mutate(filename = "8220HTf", gananciaPublic = 21.46459, grupo = "Train_Strategy")
 df5 = fread("~/R/labo/exp/8220HTe/8220HTe.csv") %>% 
-  mutate(filename = "8220HTe", gananciaPublic = 21.49459)
+  mutate(filename = "8220HTe", gananciaPublic = 21.49459, grupo = "Train_Strategy")
 df6 = fread("~/R/labo/exp/8220HTd/8220HTd.csv") %>% 
-  mutate(filename = "8220HTd", gananciaPublic = 19.97462)
+  mutate(filename = "8220HTd", gananciaPublic = 19.97462, grupo = "Train_Strategy")
 ganancia = bind_rows(ganancia, df1, df2, df3, df4, df5, df6)
 #-------
 # Entrenando con 
 df = fread("~/R/labo/exp/8000HTa/8000HTa.csv") %>% 
-  mutate(filename = "8000HTa", gananciaPublic = 19.43963)
+  mutate(filename = "8000HTa", gananciaPublic = 19.43963, grupo = "Features")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8121HTa/8121HTa.csv") %>% 
-  mutate(filename = "8121HTa", gananciaPublic = 17.86466)
+  mutate(filename = "8121HTa", gananciaPublic = 17.86466, grupo = "Hyperparameter_Tun")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8121HTc/8121HTc.csv") %>% 
-  mutate(filename = "8121HTc", gananciaPublic = 19.35463)
+  mutate(filename = "8121HTc", gananciaPublic = 19.35463, grupo = "Hyperparameter_Tun")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8121HTb/8121HTb.csv") %>% 
-  mutate(filename = "8121HTb", gananciaPublic = 19.40963)
+  mutate(filename = "8121HTb", gananciaPublic = 19.40963, grupo = "Hyperparameter_Tun")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8122HTa/8122HTa.csv") %>% 
-  mutate(filename = "8122HTa", gananciaPublic = 20.56961)
+  mutate(filename = "8122HTa", gananciaPublic = 20.56961, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8122HTb/8122HTb.csv") %>% 
-  mutate(filename = "8122HTb", gananciaPublic = 20.95960)
+  mutate(filename = "8122HTb", gananciaPublic = 20.95960, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8122HTc/8122HTc.csv") %>% 
-  mutate(filename = "8122HTc", gananciaPublic = 21.41459)
+  mutate(filename = "8122HTc", gananciaPublic = 21.41459, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8122HTd/8122HTd.csv") %>% 
-  mutate(filename = "8122HTd", gananciaPublic = 20.09462)
+  mutate(filename = "8122HTd", gananciaPublic = 20.09462, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando -------
 df = fread("~/R/labo/exp/8122HTe/8122HTe.csv") %>% 
-  mutate(filename = "8122HTe", gananciaPublic = 19.66463)
+  mutate(filename = "8122HTe", gananciaPublic = 19.66463, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando-------
 df = fread("~/R/labo/exp/8122HTf/8122HTf.csv") %>% 
-  mutate(filename = "8122HTf", gananciaPublic = 17.42967)
+  mutate(filename = "8122HTf", gananciaPublic = 17.42967, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando-------
 df = fread("~/R/labo/exp/8122HTg/8122HTg.csv") %>% 
-  mutate(filename = "8122HTg", gananciaPublic = 20.57961)
+  mutate(filename = "8122HTg", gananciaPublic = 20.57961, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando-------
 df = fread("~/R/labo/exp/8122HTh/8122HTh.csv") %>% 
-  mutate(filename = "8122HTh", gananciaPublic = 21.65959)
+  mutate(filename = "8122HTh", gananciaPublic = 21.65959, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando-------
 df = fread("~/R/labo/exp/8122HTi/8122HTi.csv") %>% 
-  mutate(filename = "8122HTi", gananciaPublic = 18.95964)
+  mutate(filename = "8122HTi", gananciaPublic = 18.95964, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 # Entrenando-------
 df = fread("~/R/labo/exp/8122HTj/8122HTj.csv") %>% 
-  mutate(filename = "8122HTj", gananciaPublic = 21.59959)
+  mutate(filename = "8122HTj", gananciaPublic = 21.59959, grupo = "a_Main_Path")
+ganancia = bind_rows(ganancia, df)
+# Entrenando-------
+df = fread("~/R/labo/exp/8122HTk/8122HTk.csv") %>% 
+  mutate(filename = "8122HTk", gananciaPublic = 21.29960, grupo = "a_Main_Path")
 ganancia = bind_rows(ganancia, df)
 
 
@@ -173,17 +178,18 @@ gan_8131g = ganancia %>% filter(str_detect(filename, "8122HTa|8122HTc|8122HTe|81
 
 
 temp = tribble(
-  ~filename, ~ganancia, ~gananciaPublic,  
-  "8131HBc_8121ZZb+8122ZZa", gan_8131$ganancia, 21.10960,  
-  "8131HBd_8122ZZb+a", gan_8131d$ganancia, 21.44459, 
-  "8131HBe_8122ZZc+d", gan_8131e$ganancia, 20.70, 
-  "8131HBf_8122ZZa+b+c+d+e+f", gan_8131f$ganancia, 20.79961,
-  "8131HBg_8122ZZa+c+e+g", gan_8131f$ganancia, 20.15462
+  ~filename, ~ganancia, ~gananciaPublic, ~grupo,
+  "8131HBc_8121ZZb+8122ZZa", gan_8131$ganancia, 21.10960,  "Hybrid",
+  "8131HBd_8122ZZb+a", gan_8131d$ganancia, 21.44459,  "Hybrid",
+  "8131HBe_8122ZZc+d", gan_8131e$ganancia, 20.70,  "Hybrid",
+  "8131HBf_8122ZZa+b+c+d+e+f", gan_8131f$ganancia, 20.79961,  "Hybrid",
+  "8131HBg_8122ZZa+c+e+g", gan_8131f$ganancia, 20.15462, "Hybrid"
   
 )
 
 #----------------------
-ganancia_G = ganancia %>% 
+ganancia_G_accesorios = ganancia %>% 
+  filter(grupo != "a_Main_Path") %>% 
   group_by(filename) %>% 
   arrange(desc(ganancia)) %>% 
   slice(1:15) %>% bind_rows(temp) %>%
@@ -191,16 +197,51 @@ ganancia_G = ganancia %>%
   ggplot(aes(x= filename, y=ganancia/1000000, color = gananciaPublic)) + 
   geom_point() +
   scale_colour_viridis_c() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 14)) +
+  #theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 14)) +
+  theme(axis.text.x = element_blank()) +
   labs(title = "Modelos según Ganancia en entrenamiento y Tablero Público",  
-       x ="", y = "ganancia entrenamiento (millones)")
+       x ="", y = "ganancia entrenamiento (millones)") +
+  facet_grid(cols = vars(grupo))
 
-plotly::ggplotly(ganancia_G)
+ganancia_G_main = ganancia %>% 
+  filter(grupo == "a_Main_Path") %>% 
+  group_by(filename) %>% 
+  arrange(desc(ganancia)) %>% 
+  slice(1:15) %>% bind_rows(temp) %>%
+  #ggplot(aes(x= reorder(filename, gananciaPublic) , y=ganancia/1000000, color = gananciaPublic)) +
+  ggplot(aes(x= filename, y=ganancia/1000000, color = gananciaPublic)) + 
+  geom_point() +
+  scale_colour_viridis_c() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1, size = 10)) +
+  #theme(axis.text.x = element_blank()) +
+  labs(title = "Modelos según Ganancia en entrenamiento y Tablero Público",  
+       x ="", y = "ganancia entrenamiento (millones)") 
+
 ```
 
-# Tabla para revisión de parámetros de experiementos corridos (parcial)
+## Línea Principal de Experimentos
 
-```{r, eval= (primera_parte | AI)}
+```{r, fig.height=8, fig.width=12}
+plotly::ggplotly(ganancia_G_main)
+```
+
+## Modelo seleccionado 8122j con las siguientes características:
+
+- Nuevas variables: sobre la base de poteciar la señal vinculada al 'volumen transaccional' del cliente se crearon variables sobre actividad financiera (prestamos, movimientos y consumo tajetas), af_edad_antiguedad cliente, y evolución temporal de dichas variables (ej.tendencias).
+- Entrenamiento final del modelo sobre trimestre septiembre-octubre 2020, con buenos resultados en los experimentos.
+- Ensamble final de 100 modelos con distintas semillas.
+
+## Experimentos Secundarios
+
+```{r, fig.height=8, fig.width=12}
+plotly::ggplotly(ganancia_G_accesorios)
+```
+
+\pagebreak
+
+# Tabla de Estrategia de Entrenamiento y sus respectivas ganancias
+
+```{r}
 setwd("~/R/labo/exp/")
 filenames <- list.files(pattern="*.yml", recursive = T)
 ymls <- do.call(rbind, lapply(filenames, function(x) cbind(read_yaml(x), filename = x))) 
@@ -224,14 +265,8 @@ for(i in 1:nexp){
   df_total <- rbind(df_total, tb)
 
 }
-
-DT::datatable(df_total, class = "cell-border stripe", rownames = FALSE, filter ="top", 
-              editable =TRUE, extension = "Buttons", fillContainer = FALSE,
-              options = list(dom="Bfrtip",  buttons =c("copy", "csv", "excel", "pdf","print")))
-
 ```
 
-# Tabla de revisión de Estrategia de Entrenamiento y sus respectivas ganancias
 
 ```{r}
 ts <- df_total %>% 
@@ -267,7 +302,7 @@ ts %>%
               background = spec_color(ts$gananciaPublic))
 ```
 
-# Revisión de Hiperparámetros
+# Tabla de Hiperparámetros de Optimizaciones Bayesianas y sus Ganancias
 
 ```{r}
 ht <- df_total %>% 
@@ -285,16 +320,16 @@ ht = ht %>%
               group_by(filename) %>% 
               filter(ganancia == max(ganancia))) %>% 
   select(filename,learning_rate1,learning_rate2,feature_fraction1,feature_fraction2,
-         num_leaves1,num_leaves2,min_data_in_leaf1,min_data_in_leaf2,lambda_l1,lambda_l2,
+         num_leaves1,num_leaves2,min_data_in_leaf1,min_data_in_leaf2,
          max_depth, BO.iterations, ganancia,gananciaPublic) %>% 
   arrange(desc(ganancia))
 
 ht %>% 
   kable() %>% 
   kable_classic(full_width = T, html_font = "Cambria") %>% 
-  column_spec(14, color = "white",
+  column_spec(12, color = "white",
               background = spec_color(ht$ganancia)) %>% 
-  column_spec(15, color = "white",
+  column_spec(13, color = "white",
               background = spec_color(ht$gananciaPublic))
 
 ```
@@ -319,9 +354,9 @@ top10Model %>%
 
 ```
 
-# Revisión de features
+# Gráficos de Features según su ganancia en las Optimizaciones Bayesianas
 
-```{r, fig.height=8, fig.width=14}
+```{r, fig.height=8, fig.width=12}
 setwd("~/R/labo/exp/impofiles")
 
 filenames <- list.files(pattern="impo_*")
@@ -332,9 +367,10 @@ tbl <- do.call(rbind,
 
 tbl = tbl %>% 
   group_by(filename) %>% 
-  mutate(pos = row_number())
+  mutate(pos = row_number()) %>% 
+  mutate(filename = str_remove_all(filename, "impo_|.csv"))
 
-nfeatures = 35
+nfeatures = 20
 
 features_G = tbl %>% 
   filter(!str_detect(Feature, "foto")) %>% 
@@ -348,12 +384,12 @@ features_G = tbl %>%
       legend.position = "none",
       plot.background = element_rect(fill = "#3e3d40", color = "#3e3d40"),
       strip.text.x = element_text(hjust = 0, color = "#dcbf35"),
-      axis.title.x.top = element_text(color = "#dcbf35", hjust = 0),
+      axis.title.x.top = element_text(color = "#dcbf35", hjust = 0, angle = 90),
       panel.grid.major.y = element_blank(),
       panel.grid.minor.y = element_blank(),
       panel.grid.major.x = element_line(color = "#dcbf35"),
       panel.grid.minor.x = element_blank(),
-      axis.text.y = element_text(colour = "white", size = 6),
+      axis.text.y = element_text(colour = "white", size = 8),
       axis.title.y = element_blank(),
       axis.title.x = element_text(hjust = 0.5, colour = "grey"),
       axis.text.x = element_text(color = "#dcbf35"),
@@ -363,8 +399,9 @@ features_G = tbl %>%
 plotly::ggplotly(features_G)
 
 ```
+# Gráficos de Features según su ganancia en las Optimizaciones Bayesianas
 
-```{r, fig.height=8, fig.width=14}
+```{r, fig.height=8, fig.width=12}
 features_G2 = tbl %>%
   filter(!str_detect(Feature, "foto")) %>%
   filter(pos < 35) %>%
@@ -378,7 +415,7 @@ features_G2 = tbl %>%
 plotly::ggplotly(features_G2)
 
 ```
-# Modelos por mes
+# Experimentos en datos mensuales para determinar ventana temporal de entrenamiento
 
 ```{r}
 setwd("~/R/labo/datasets")
@@ -400,29 +437,15 @@ tbl %>%
 
 
 ```
+\pagebreak
 
-<!-- # Modelo Denicolay1 -->
+# ANEXO: Tabla para consulta de parámetros por experiemento 
 
-<!-- ```{r, eval= (primera_parte | AI), echo = T} -->
-<!-- kdataset       <- "./datasets/paquete_premium_ext_721.csv.gz" -->
-<!-- #donde entrenar -->
-<!-- kfinal_mes_desde    <- 201912        #mes desde donde entreno -->
-<!-- kfinal_mes_hasta    <- 202011        #mes hasta donde entreno, inclusive -->
-<!-- kfinal_meses_malos  <- c( 202006 )   #meses a excluir del entrenamiento -->
-<!-- #hiperparametros de LightGBM -->
-<!-- #aqui copiar a mano lo menor de la Bayesian Optimization -->
-<!-- # si es de IT y le gusta automatizar todo, no proteste, ya llegara con MLOps -->
-<!-- kmax_bin           <-    31 -->
-<!-- klearning_rate     <-     0.0131094708 -->
-<!-- knum_iterations    <-   951 -->
-<!-- knum_leaves        <-  1002 -->
-<!-- kmin_data_in_leaf  <- 16918 -->
-<!-- kfeature_fraction  <-     0.5609450635 -->
-
-<!-- # 8120FEa_gustavo -->
-<!-- # Contiene: lag1, tendencia6, avg6, minimo, delta1 -->
-<!-- # 8120ZZ_gustavo -->
-<!-- # Contiene: Semillero 50 -->
+```{r, eval= (primera_parte | AI)}
 
 
-<!-- ``` -->
+DT::datatable(df_total, class = "cell-border stripe", rownames = FALSE, filter ="top", 
+              editable =TRUE, extension = "Buttons", fillContainer = FALSE,
+              options = list(dom="Bfrtip",  buttons =c("copy", "csv", "excel", "pdf","print")))
+
+```
